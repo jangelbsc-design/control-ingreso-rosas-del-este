@@ -54,6 +54,9 @@ button { font-family: inherit; cursor: pointer; }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .logo { display: flex; align-items: center; }
 .logo-img { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; }
+.brand-text h1 {
+  font-size: 17px; font-weight: 800; letter-spacing: .2px; line-height: 1.1;
+}
 .top-right { display: flex; align-items: center; gap: 8px; }
 
 /* ---------------- Volver arriba ---------------- */
