@@ -9,8 +9,6 @@
 var state = {
   rows: [],          // registros procesados
   loaded: false,
-  sourceLabel: "",
-  loadedAt: null,
   query: "",
   tab: "all",        // all | vigente | mora
   selected: null,
@@ -245,32 +243,28 @@ function loadData() {
         var cache = loadCache();
         if (cache) {
           state.rows = cache.rows;
-          state.sourceLabel = "Datos locales · " + new Date(cache.ts).toLocaleString();
           state.loaded = true;
-          state.loadedAt = cache.ts;
           afterLoad();
           return;
         }
         return;
       }
-      finalize(result, "Google Sheets");
+      finalize(result);
     });
   };
 
   loadViaJSONP(APP_CONFIG.SHEET_NAME, function (err, result) {
     if (!err) {
-      finalize(result, "Google Sheets");
+      finalize(result);
       return;
     }
     attempt(err);
   });
 
-  function finalize(result, label) {
+  function finalize(result) {
     var rows = buildRows(result.cols, result.rows);
     state.rows = rows;
-    state.sourceLabel = label;
     state.loaded = true;
-    state.loadedAt = Date.now();
     cacheRows(rows);
     afterLoad();
   }
@@ -297,9 +291,6 @@ function renderSummary() {
   $("tabAll").textContent = " Todos (" + c.total + ") ";
   $("tabVig").textContent = " Vigentes (" + c.vig + ") ";
   $("tabMora").textContent = " En mora (" + c.mora + ") ";
-  $("metaInfo").textContent = state.sourceLabel
-    ? state.sourceLabel + " · " + new Date(state.loadedAt).toLocaleTimeString()
-    : "";
 }
 
 /* ---------------- Filtros ---------------- */
@@ -806,11 +797,18 @@ function submitManualEntry(ev) {
 
 /* ---------------- Init ---------------- */
 function init() {
-  // fecha del día
-  var d = new Date();
+  // fecha y hora del día
   var days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
   var months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-  $("todayLabel").textContent = days[d.getDay()] + ", " + d.getDate() + " de " + months[d.getMonth()];
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function renderToday() {
+    var d = new Date();
+    $("todayLabel").textContent =
+      days[d.getDay()] + ", " + d.getDate() + " de " + months[d.getMonth()] +
+      " · " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  }
+  renderToday();
+  setInterval(renderToday, 30000);
 
   // búsqueda
   $("searchInput").addEventListener("input", function (e) {

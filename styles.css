@@ -97,11 +97,6 @@ button { font-family: inherit; cursor: pointer; }
   padding: 12px 0; min-width: 0;
 }
 .search-box input::placeholder { color: #9aa0a6; font-weight: 500; }
-.scan-hint {
-  background: var(--verde-claro); color: var(--verde-osc);
-  border: 0; border-radius: 12px; padding: 10px; display: grid; place-items: center;
-}
-.scan-hint:active { transform: scale(.95); }
 
 /* ---------------- Pestañas estado ---------------- */
 .tabs { display: flex; gap: 6px; padding: 8px 0 6px; position: sticky; top: 112px; z-index: 14; background: var(--gris-bg); }
@@ -120,7 +115,6 @@ button { font-family: inherit; cursor: pointer; }
   padding: 10px 2px 8px; font-size: 13px; color: var(--gris-texto);
 }
 .count-line strong { color: var(--negro); font-size: 15px; }
-.meta-info { font-size: 11px; color: #b0b4b9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------------- Tarjetas ---------------- */
 .results { display: flex; flex-direction: column; gap: 10px; }
