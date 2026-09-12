@@ -29,17 +29,6 @@
           <path fill="#0e7a3d" d="m10.5 15-2.3-2.3 1.2-1.2 1.1 1.1 3.9-3.9 1.2 1.2z"/>
         </svg>
       </div>
-      <div class="brand-text">
-        <h1>Rosas del Este</h1>
-        <span>Control de Ingreso</span>
-      </div>
-    </div>
-    <div class="top-right">
-      <span class="status-chip">
-        <span id="statusDot" class="status-dot is-loading"></span>
-        <span id="statusLabel">Cargando datos…</span>
-      </span>
-      <button id="installBtn" type="button" class="btn btn-outline-light btn-sm" style="display:none">Instalar</button>
     </div>
   </header>
 
@@ -166,6 +155,13 @@
       <span id="badgeBitacora" class="badge" hidden></span>
     </button>
   </nav>
+
+  <!-- Volver arriba -->
+  <button type="button" id="toTopBtn" class="to-top" aria-label="Volver arriba">
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+      <path d="M12 19V5M5 12l7-7 7 7"/>
+    </svg>
+  </button>
 
   <!-- ============ FICHA DEL VECINO ============ -->
   <div id="detailOverlay" class="overlay" hidden>

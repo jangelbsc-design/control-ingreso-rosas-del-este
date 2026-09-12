@@ -238,9 +238,7 @@ function loadCache() {
   return null;
 }
 
-function loadData(silent) {
-  setStatus("loading", silent);
-
+function loadData() {
   var attempt = function (err) {
     if (!err) return;
     loadViaExportCSV(function (err2, result) {
@@ -251,10 +249,9 @@ function loadData(silent) {
           state.sourceLabel = "Datos locales · " + new Date(cache.ts).toLocaleString();
           state.loaded = true;
           state.loadedAt = cache.ts;
-          afterLoad("cache");
+          afterLoad();
           return;
         }
-        setStatus("error", false);
         return;
       }
       finalize(result, "Google Sheets");
@@ -276,42 +273,14 @@ function loadData(silent) {
     state.loaded = true;
     state.loadedAt = Date.now();
     cacheRows(rows);
-    afterLoad("live");
+    afterLoad();
   }
 }
 
-function afterLoad(how) {
+function afterLoad() {
   state.loaded = true;
   renderSummary();
   applyFilters();
-  if (how === "live") {
-    setStatus("ok", false);
-  }
-}
-
-/* ---------------- Indicador de estado ---------------- */
-function setStatus(kind, silent) {
-  var dot = $("statusDot");
-  var label = $("statusLabel");
-  if (!dot || !label) return;
-  switch (kind) {
-    case "loading":
-      dot.className = "status-dot is-loading";
-      label.textContent = "Cargando datos…";
-      break;
-    case "ok":
-      dot.className = "status-dot is-ok";
-      label.textContent = "En línea";
-      break;
-    case "cache":
-      dot.className = "status-dot is-cache";
-      label.textContent = "Sin conexión (datos guardados)";
-      break;
-    case "error":
-      dot.className = "status-dot is-error";
-      label.textContent = "Sin datos · Verifica la hoja";
-      break;
-  }
 }
 
 /* ---------------- Resumen ---------------- */
@@ -843,29 +812,8 @@ function submitManualEntry(ev) {
   switchView("bitacora");
 }
 
-/* ---------------- Instalación PWA ---------------- */
-var deferredPrompt = null;
-window.addEventListener("beforeinstallprompt", function (e) {
-  e.preventDefault();
-  deferredPrompt = e;
-  var b = $("installBtn");
-  b.style.display = "";
-  b.addEventListener("click", function () {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function () {
-      deferredPrompt = null;
-      b.style.display = "none";
-    });
-  });
-});
-
 /* ---------------- Init ---------------- */
 function init() {
-  // persianas de estado
-  $("statusDot").className = "status-dot is-loading";
-  $("statusLabel").textContent = "Cargando datos…";
-
   // fecha del día
   var d = new Date();
   var days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -952,11 +900,22 @@ function init() {
     }
   });
 
-  loadData(false);
+  loadData();
 
   if (APP_CONFIG.AUTO_REFRESH_MIN && APP_CONFIG.AUTO_REFRESH_MIN > 0) {
-    setInterval(function () { loadData(true); }, APP_CONFIG.AUTO_REFRESH_MIN * 60000);
+    setInterval(function () { loadData(); }, APP_CONFIG.AUTO_REFRESH_MIN * 60000);
   }
+
+  // volver arriba
+  var toTopBtn = $("toTopBtn");
+  function syncToTopBtn() {
+    toTopBtn.classList.toggle("show", window.scrollY > 300);
+  }
+  toTopBtn.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  window.addEventListener("scroll", syncToTopBtn, { passive: true });
+  syncToTopBtn();
 
   // registro del service worker
   if ("serviceWorker" in navigator) {
