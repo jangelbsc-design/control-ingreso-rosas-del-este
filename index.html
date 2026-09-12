@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <title>Control de Ingreso · Urbanización Rosas del Este</title>
+  <meta name="theme-color" content="#0b0b0d">
+  <meta name="description" content="App de control de ingreso y directorio de vecinos de la Urbanización Rosas del Este.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Rosas del Este">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============ CABECERA ============ -->
+  <header id="topbar">
+    <div class="brand">
+      <div class="logo">
+        <img id="logoImg" src="imágenes/logo.webp" alt=""
+             onload="this.nextElementSibling.style.display='none'"
+             onerror="this.remove()">
+        <svg class="logo-svg" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+          <path fill="#0e7a3d" d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/>
+          <path fill="#ffffff" d="M12 3.5 5 6.7v4.3c0 4.6 3.1 9 7 10.3 3.9-1.3 7-5.7 7-10.3V6.7l-7-3.2z"/>
+          <path fill="#0e7a3d" d="m10.5 15-2.3-2.3 1.2-1.2 1.1 1.1 3.9-3.9 1.2 1.2z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Rosas del Este</h1>
+        <span>Control de Ingreso</span>
+      </div>
+    </div>
+    <div class="top-right">
+      <span class="status-chip">
+        <span id="statusDot" class="status-dot is-loading"></span>
+        <span id="statusLabel">Cargando datos…</span>
+      </span>
+      <button id="installBtn" type="button" class="btn btn-outline-light btn-sm" style="display:none">Instalar</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============ VISTA: DIRECTORIO ============ -->
+    <section id="viewDirectorio">
+
+      <div class="today-line"><span id="todayLabel"></span></div>
+
+      <div class="search-panel">
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+          </svg>
+          <input id="searchInput" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="Buscar por manzano, nombre, celular o placa…">
+          <button type="button" class="scan-hint" title="Sugerencia">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/>
+              <rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="scope-chips">
+          <button type="button" class="scope-chip active" data-scope="all">Todo</button>
+          <button type="button" class="scope-chip" data-scope="block">Mazano</button>
+          <button type="button" class="scope-chip" data-scope="owner">Nombre</button>
+          <button type="button" class="scope-chip" data-scope="phone">Celular</button>
+          <button type="button" class="scope-chip" data-scope="plate">Placa</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-tab="all"><span id="tabAll"> Todos (0) </span></button>
+        <button type="button" class="tab-btn tab-btn-green" data-tab="vigente"><span id="tabVig"> Vigentes (0) </span></button>
+        <button type="button" class="tab-btn tab-btn-red" data-tab="mora"><span id="tabMora"> En mora (0) </span></button>
+      </div>
+
+      <div class="count-line">
+        <span id="countLine">Cargando…</span>
+        <span id="metaInfo" class="meta-info"></span>
+      </div>
+
+      <div id="results" class="results"></div>
+
+      <div id="empty" class="empty-state" hidden>
+        <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#9aa0a6" stroke-width="1.5" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8 11h6"/>
+        </svg>
+        <p><strong>Sin resultados</strong></p>
+        <p>Verifica la ortografía o cambia el filtro.</p>
+      </div>
+
+    </section>
+
+    <!-- ============ VISTA: BITÁCORA ============ -->
+    <section id="viewBitacora" hidden>
+      <div class="subhead">
+        <button type="button" id="bitClose" class="back-btn">‹ Inicio</button>
+        <h2>Bitácora de ingresos</h2>
+        <div class="subhead-actions">
+          <label class="toggle-label">
+            <input type="checkbox" id="bitToday" checked> Sólo hoy
+          </label>
+          <button type="button" id="bitExport" class="btn btn-dark btn-sm">Exportar CSV</button>
+          <button type="button" id="bitClear" class="btn btn-outline-red btn-sm">Vaciar hoy</button>
+        </div>
+      </div>
+      <div class="count-line"><span id="bitCount"></span></div>
+      <div id="bitList" class="bit-list"></div>
+    </section>
+
+    <!-- ============ VISTA: INGRESO MANUAL ============ -->
+    <section id="viewForm" hidden>
+      <div class="subhead">
+        <button type="button" id="formClose" class="back-btn">‹ Inicio</button>
+        <h2>Registrar ingreso</h2>
+      </div>
+      <form id="formEntrada" class="entry-form">
+        <label class="field">
+          <span>Manzano / Lote</span>
+          <input type="text" id="formManzano" placeholder="Ej. M21 - 45" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Nombre / Visitante</span>
+          <input type="text" id="formNombre" placeholder="Nombre de la persona" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Placa de vehículo</span>
+          <input type="text" id="formPlaca" placeholder="Ej. 1234-ABC" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>Nota (opcional)</span>
+          <input type="text" id="formNota" placeholder="Ej. visita, proveedor…" autocomplete="off">
+        </label>
+        <button type="submit" class="btn btn-green btn-lg w-full">Registrar ingreso</button>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- ============ NAVEGACIÓN INFERIOR ============ -->
+  <nav id="bottomNav">
+    <button type="button" class="nav-item active" data-view="directorio">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+      </svg>
+      <span>Directorio</span>
+    </button>
+    <button type="button" class="nav-item nav-fab" id="newEntryBtn" data-view="form" aria-label="Registrar ingreso">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      <span>Ingreso</span>
+    </button>
+    <button type="button" class="nav-item" data-view="bitacora">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <path d="M14 2v6h6M8 13h8M8 17h8"/>
+      </svg>
+      <span>Bitácora</span>
+      <span id="badgeBitacora" class="badge" hidden></span>
+    </button>
+  </nav>
+
+  <!-- ============ FICHA DEL VECINO ============ -->
+  <div id="detailOverlay" class="overlay" hidden>
+    <div class="overlay-body detail-body">
+      <div class="detail-top">
+        <button type="button" id="dtClose" class="back-btn" aria-label="Cerrar">✕</button>
+        <span class="dt-block-label">Manzano <strong id="dtBlock">—</strong></span>
+      </div>
+
+      <div id="dtBanner" class="dt-banner banner-otro">
+        <div class="dt-banner-title">—</div>
+        <div class="dt-banner-sub">—</div>
+      </div>
+
+      <div class="detail-content">
+        <div class="dt-section">
+          <h3>Propietario(s)</h3>
+          <div id="dtName" class="dt-name">—</div>
+        </div>
+
+        <div class="dt-section">
+          <h3>Vehículo</h3>
+          <div id="dtPlates" class="dt-plates"></div>
+        </div>
+
+        <div class="dt-section">
+          <h3>Contacto</h3>
+          <div id="dtPhones"></div>
+        </div>
+
+        <div id="dtExtraWrap" class="dt-section" hidden>
+          <h3>Detalles</h3>
+          <div id="dtExtra" class="dt-extra"></div>
+        </div>
+
+        <div class="detail-actions">
+          <button type="button" id="dtLlamar" class="btn btn-dark btn-lg">Llamar</button>
+          <button type="button" id="dtWhatsapp" class="btn btn-green btn-lg">WhatsApp</button>
+        </div>
+        <div class="detail-actions detail-actions-secondary">
+          <button type="button" id="dtCopiar" class="btn btn-outline-dark">Copiar placa</button>
+          <button type="button" id="dtRegistrar" class="btn btn-outline-green">Registrar ingreso</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOJA DE ACCIONES: TELÉFONO ============ -->
+  <div id="phoneSheet" class="overlay sheet-overlay" hidden>
+    <div class="sheet" role="dialog" aria-label="Acciones de teléfono">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Acciones con el teléfono</div>
+      <div class="sheet-number" id="psNumber">—</div>
+      <div class="sheet-grid">
+        <button type="button" id="psCall" class="btn btn-dark btn-lg">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>
+            <path d="M15 5a4 4 0 0 1 4 4"/>
+          </svg>
+          Llamar
+        </button>
+        <button type="button" id="psWa" class="btn btn-green btn-lg">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5z"/>
+            <path d="M9 10.5c.5-1 1.5-1 2-.5l.5 1-1 1.5a5 5 0 0 0 2.5 2.5l1.5-1 1 .5c.5.5.5 1.5-.5 2C13.5 17 10 15 9 12.5z"/>
+          </svg>
+          WhatsApp
+        </button>
+      </div>
+      <button type="button" id="psCancel" class="btn btn-ghost w-full">Cancelar</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

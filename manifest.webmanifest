@@ -1,0 +1,20 @@
+{
+  "name": "Control de Ingreso · Urbanización Rosas del Este",
+  "short_name": "Rosas del Este",
+  "description": "Directorio de vecinos y control de ingreso: busca por manzano, nombre, celular o placa.",
+  "lang": "es",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0b0d",
+  "theme_color": "#0b0b0d",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
