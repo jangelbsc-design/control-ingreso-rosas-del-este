@@ -1,5 +1,5 @@
 /* Service Worker · Urbanización Rosas del Este */
-var CACHE = "rde-v5";
+var CACHE = "rde-app";
 var ASSETS = [
   "./",
   "./index.html",
@@ -29,6 +29,12 @@ self.addEventListener("activate", function (event) {
   );
 });
 
+self.addEventListener("message", function (event) {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", function (event) {
   var request = event.request;
   if (request.method !== "GET") return;
@@ -37,13 +43,15 @@ self.addEventListener("fetch", function (event) {
   if (url.origin !== location.origin) return;
 
   event.respondWith(
-    caches.match(request).then(function (cached) {
-      if (cached) return cached;
-      return fetch(request).then(function (response) {
+    fetch(request).then(function (response) {
+      if (response && response.status === 200) {
         var copy = response.clone();
         caches.open(CACHE).then(function (cache) { cache.put(request, copy); });
-        return response;
-      }).catch(function () {
+      }
+      return response;
+    }).catch(function () {
+      return caches.match(request).then(function (cached) {
+        if (cached) return cached;
         return caches.match("./index.html");
       });
     })

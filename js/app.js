@@ -897,9 +897,25 @@ function init() {
   window.addEventListener("scroll", syncToTopBtn, { passive: true });
   syncToTopBtn();
 
-  // registro del service worker
+  // registro del service worker (siempre mantiene la versión actualizada)
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(function () { /* offline no requerido */ });
+    var hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register("sw.js").then(function (reg) {
+      reg.addEventListener("updatefound", function () {
+        var sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener("statechange", function () {
+          if (sw.state === "installed" && navigator.serviceWorker.controller) {
+            if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
+      });
+      setInterval(function () { reg.update(); }, 30 * 60000);
+    }).catch(function () { /* offline no requerido */ });
+
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (hadController) window.location.reload();
+    });
   }
 }
 
