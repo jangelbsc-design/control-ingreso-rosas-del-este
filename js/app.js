@@ -12,7 +12,6 @@ var state = {
   sourceLabel: "",
   loadedAt: null,
   query: "",
-  scope: "all",      // all | block | owner | phone | plate
   tab: "all",        // all | vigente | mora
   selected: null,
   view: "directorio" // directorio | bitacora | form
@@ -313,14 +312,7 @@ function filteredRows() {
 
   if (!nq) return rows;
 
-  var scope = state.scope;
-  var digits = String(state.query).replace(/\D/g, "");
-
   return rows.filter(function (r) {
-    if (scope === "block") return normalizeText(r.block).indexOf(nq) !== -1;
-    if (scope === "owner") return normalizeText(r.ownerName).indexOf(nq) !== -1;
-    if (scope === "phone") return r.phones.some(function (p) { return p.indexOf(digits) !== -1; });
-    if (scope === "plate") return r.plates.some(function (p) { return normalizeText(p).indexOf(nq) !== -1; });
     return r.searchText.indexOf(nq) !== -1;
   });
 }
@@ -827,16 +819,6 @@ function init() {
   });
   $("searchInput").addEventListener("keydown", function (e) {
     if (e.key === "Escape") { this.value = ""; state.query = ""; applyFilters(); }
-  });
-
-  document.querySelectorAll(".scope-chip").forEach(function (chip) {
-    chip.addEventListener("click", function () {
-      state.scope = chip.getAttribute("data-scope");
-      document.querySelectorAll(".scope-chip").forEach(function (c) { c.classList.remove("active"); });
-      chip.classList.add("active");
-      applyFilters();
-      $("searchInput").focus();
-    });
   });
 
   document.querySelectorAll(".tab-btn").forEach(function (btn) {

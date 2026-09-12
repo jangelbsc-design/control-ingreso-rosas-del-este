@@ -103,17 +103,6 @@ button { font-family: inherit; cursor: pointer; }
 }
 .scan-hint:active { transform: scale(.95); }
 
-.scope-chips { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.scope-chip {
-  border: 1.5px solid var(--gris-linea);
-  background: var(--blanco); color: var(--gris-texto);
-  border-radius: 999px; padding: 7px 14px;
-  font-size: 13px; font-weight: 700;
-}
-.scope-chip.active {
-  background: var(--negro); border-color: var(--negro); color: var(--blanco);
-}
-
 /* ---------------- Pestañas estado ---------------- */
 .tabs { display: flex; gap: 6px; padding: 8px 0 6px; position: sticky; top: 112px; z-index: 14; background: var(--gris-bg); }
 .tab-btn {
