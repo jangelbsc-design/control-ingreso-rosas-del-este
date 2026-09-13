@@ -97,6 +97,13 @@ button { font-family: inherit; cursor: pointer; }
   padding: 12px 0; min-width: 0;
 }
 .search-box input::placeholder { color: #9aa0a6; font-weight: 500; }
+.search-clear {
+  flex: 0 0 auto; width: 36px; height: 36px; margin-right: 4px;
+  display: grid; place-items: center;
+  border: 0; border-radius: 50%;
+  background: transparent; color: var(--gris-texto); font-size: 18px;
+}
+.search-clear:active { background: rgba(0, 0, 0, .08); }
 
 /* ---------------- Pestañas estado ---------------- */
 .tabs { display: flex; gap: 6px; padding: 8px 0 6px; position: sticky; top: 112px; z-index: 14; background: var(--gris-bg); }

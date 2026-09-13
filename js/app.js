@@ -545,14 +545,6 @@ function openDetail(r) {
     extraList.appendChild(row);
   });
 
-  $("dtLlamar").onclick = function () {
-    if (r.phonesDial.length) call(r.phonesDial[0]);
-    else toast("No hay número de teléfono registrado");
-  };
-  $("dtWhatsapp").onclick = function () {
-    if (r.phonesDial.length) whatsapp(r.phonesDial[0], r);
-    else toast("No hay número de teléfono registrado");
-  };
   $("dtCopiar").onclick = function () {
     if (!r.plates.length) { toast("No hay placa que copiar"); return; }
     var text = r.plates.join(", ");
@@ -811,13 +803,25 @@ function init() {
   setInterval(renderToday, 30000);
 
   // búsqueda
-  $("searchInput").addEventListener("input", function (e) {
+  var searchInput = $("searchInput");
+  var searchClear = $("searchClear");
+  function syncSearchClear() { searchClear.hidden = !state.query; }
+  searchInput.addEventListener("input", function (e) {
     state.query = e.target.value;
+    syncSearchClear();
     applyFilters();
   });
-  $("searchInput").addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { this.value = ""; state.query = ""; applyFilters(); }
+  searchInput.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { this.value = ""; state.query = ""; syncSearchClear(); applyFilters(); }
   });
+  searchClear.addEventListener("click", function () {
+    searchInput.value = "";
+    state.query = "";
+    syncSearchClear();
+    applyFilters();
+    searchInput.focus();
+  });
+  syncSearchClear();
 
   document.querySelectorAll(".tab-btn").forEach(function (btn) {
     btn.addEventListener("click", function () {
