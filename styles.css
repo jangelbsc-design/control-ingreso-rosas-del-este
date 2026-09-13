@@ -106,7 +106,7 @@ button { font-family: inherit; cursor: pointer; }
 .search-clear:active { background: rgba(0, 0, 0, .08); }
 
 /* ---------------- Pestañas estado ---------------- */
-.tabs { display: flex; gap: 6px; padding: 8px 0 6px; position: sticky; top: 112px; z-index: 14; background: var(--gris-bg); }
+.tabs { display: flex; gap: 6px; padding: 8px 0 6px; background: var(--gris-bg); }
 .tab-btn {
   flex: 1; border: 1.5px solid var(--gris-linea); background: var(--blanco);
   border-radius: 12px; padding: 9px 4px;
