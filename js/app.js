@@ -274,6 +274,7 @@ function afterLoad() {
   state.loaded = true;
   renderSummary();
   applyFilters();
+  buildOwnerList();
 }
 
 /* ---------------- Resumen ---------------- */
@@ -771,18 +772,53 @@ function toast(msg) {
 }
 
 /* ---------------- Formulario manual ---------------- */
+function lookupOwner(propName) {
+  var nq = normalizeText(propName);
+  if (!nq) return { name: propName, block: "" };
+  var hit = null, part = null;
+  state.rows.forEach(function (r) {
+    if (normalizeText(r.ownerName) === nq) hit = r;
+    if (!part && (r.ownerParts || []).some(function (p) { return normalizeText(p) === nq; })) part = r;
+  });
+  var r = hit || part;
+  return r ? { name: r.ownerName, block: r.block } : { name: propName, block: "" };
+}
+
+function buildOwnerList() {
+  var dl = $("ownerList");
+  dl.innerHTML = "";
+  var seen = {};
+  state.rows.forEach(function (r) {
+    var candidates = [r.ownerName].concat(r.ownerParts || []);
+    candidates.forEach(function (n) {
+      n = collapseSpaces(n);
+      if (!n || seen[n]) return;
+      seen[n] = 1;
+      var o = document.createElement("option");
+      o.value = n;
+      dl.appendChild(o);
+    });
+  });
+}
+
 function submitManualEntry(ev) {
   ev.preventDefault();
-  var name = collapseSpaces($("formNombre").value);
-  var block = collapseSpaces($("formManzano").value);
+  var prop = lookupOwner(collapseSpaces($("formPropietario").value));
+  var visitor = collapseSpaces($("formVisitante").value);
   var plate = collapseSpaces($("formPlaca").value).toUpperCase();
   var note = collapseSpaces($("formNota").value);
 
-  if (!name && !block && !plate) {
+  if (!visitor && !prop.name && !plate) {
     toast("Escribe al menos un dato");
     return;
   }
-  addBitacora({ block: block, name: name, plate: plate, note: note, via: "manual" });
+  addBitacora({
+    block: prop.block,
+    name: visitor || prop.name,
+    plate: plate,
+    note: note,
+    via: "manual"
+  });
   ev.target.reset();
   switchView("bitacora");
 }

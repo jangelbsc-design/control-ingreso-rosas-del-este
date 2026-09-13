@@ -283,6 +283,8 @@ button { font-family: inherit; cursor: pointer; }
 .nav-item.nav-fab {
   flex: 0 0 84px;
   justify-content: flex-end;
+  position: absolute; left: 50%; bottom: 0; height: 100%;
+  transform: translateX(-50%);
 }
 .nav-fab::before {
   content: ""; position: absolute; top: -18px; left: 50%; width: 54px; height: 54px;

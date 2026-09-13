@@ -99,12 +99,14 @@
       </div>
       <form id="formEntrada" class="entry-form">
         <label class="field">
-          <span>Manzano / Lote</span>
-          <input type="text" id="formManzano" placeholder="Ej. M21 - 45" autocomplete="off">
+          <span>Propietario</span>
+          <input type="text" id="formPropietario" list="ownerList"
+                 placeholder="Buscar y seleccionar propietario…" autocomplete="off">
+          <datalist id="ownerList"></datalist>
         </label>
         <label class="field">
-          <span>Nombre / Visitante</span>
-          <input type="text" id="formNombre" placeholder="Nombre de la persona" autocomplete="off">
+          <span>Visitante</span>
+          <input type="text" id="formVisitante" placeholder="Nombre del visitante" autocomplete="off">
         </label>
         <label class="field">
           <span>Placa de vehículo</span>
@@ -122,12 +124,6 @@
 
   <!-- ============ NAVEGACIÓN INFERIOR ============ -->
   <nav id="bottomNav">
-    <button type="button" class="nav-item active" data-view="directorio">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
-      </svg>
-      <span>Directorio</span>
-    </button>
     <button type="button" class="nav-item nav-fab" id="newEntryBtn" data-view="form" aria-label="Registrar ingreso">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M12 5v14M5 12h14"/>
