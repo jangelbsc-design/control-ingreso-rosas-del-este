@@ -12,7 +12,8 @@ var state = {
   query: "",
   tab: "all",        // all | vigente | mora
   selected: null,
-  view: "directorio" // directorio | bitacora | form
+  view: "directorio", // directorio | bitacora | form
+  cobranzaIdx: 0     // número elegido en el recordatorio (si hay varios)
 };
 
 var CACHE_KEY = "rde_cache_v1";
@@ -767,16 +768,62 @@ function loadQr() {
   img.src = path;
 }
 
+function renderNumChips(r) {
+  var box = $("cobranzaNums");
+  var nums = r && r.phones && r.phones.length ? r.phones : [];
+  if (nums.length < 2) { box.hidden = true; box.innerHTML = ""; return; }
+  box.innerHTML = "";
+  nums.forEach(function (num, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "num-chip" + (i === 0 ? " active" : "");
+    b.setAttribute("data-idx", String(i));
+    b.textContent = formatPhoneDisplay(num);
+    box.appendChild(b);
+  });
+  box.hidden = false;
+  state.cobranzaIdx = 0;
+}
+
+function refreshCobranzaRecip() {
+  var r = state.selected;
+  if (!r) return;
+  var mora = r.status === "mora";
+  var idx = Math.min(state.cobranzaIdx || 0, (r.phones || []).length - 1);
+  var num = r.phones && r.phones.length ? r.phones[idx] : null;
+  var tel = num != null ? formatPhoneDisplay(num) : "Sin número registrado";
+  var nombre = r.ownerName || "Vecino";
+  $("cobranzaRecip").textContent = (mora ? "Cobranza · " : "Pago · ") + nombre +
+    (r.block ? " · " + formatBlockLabel(r.block) : "") + " · " + tel;
+}
+
+var numChipsBound = false;
+function bindNumChips() {
+  if (numChipsBound) return;
+  numChipsBound = true;
+  $("cobranzaNums").addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target.closest(".num-chip") : null;
+    if (!t) return;
+    var idx = parseInt(t.getAttribute("data-idx"), 10);
+    if (isNaN(idx)) return;
+    state.cobranzaIdx = idx;
+    Array.prototype.forEach.call(t.parentNode.children, function (c) {
+      c.classList.remove("active");
+    });
+    t.classList.add("active");
+    refreshCobranzaRecip();
+    vib(6);
+  });
+}
+
 function openCobranza() {
   var r = state.selected;
   if (!r) return;
   var mora = r.status === "mora";
-  var nombre = r.ownerName || "Vecino";
-  var tel = r.phones && r.phones.length ? formatPhoneDisplay(r.phones[0]) : "Sin número registrado";
-  $("cobranzaRecip").textContent = (mora ? "Cobranza · " : "Pago · ") + nombre +
-    (r.block ? " · " + formatBlockLabel(r.block) : "") + " · " + tel;
   $("cobranzaTitle").textContent = mora ? "Recordatorio de cobranza" : "Recordatorio de pago";
   $("cobranzaMsg").value = mora ? cobranzaText(r) : recordatorioText(r);
+  renderNumChips(r);
+  refreshCobranzaRecip();
   loadQr();
   $("cobranzaOverlay").hidden = false;
   document.body.classList.add("locked");
@@ -802,10 +849,11 @@ function copyCobranza() {
   }
 }
 
-function waDigits(r) {
-  return r && r.phonesDial && r.phonesDial[0]
-    ? r.phonesDial[0]
-    : (r && r.phones && r.phones[0] ? toDialNumber(r.phones[0], APP_CONFIG.COUNTRY_CODE) : "");
+function waDigits(r, idx) {
+  idx = idx || 0;
+  return r && r.phonesDial && r.phonesDial[idx]
+    ? r.phonesDial[idx]
+    : (r && r.phones && r.phones[idx] ? toDialNumber(r.phones[idx], APP_CONFIG.COUNTRY_CODE) : "");
 }
 
 function openWaFallback(dial, msg) {
@@ -815,7 +863,7 @@ function openWaFallback(dial, msg) {
 
 function sendCobranzaWA() {
   var r = state.selected;
-  var dial = waDigits(r);
+  var dial = waDigits(r, state.cobranzaIdx);
   if (!dial) { toast("Sin número de WhatsApp para este vecino"); return; }
   var msg = $("cobranzaMsg").value;
 
@@ -1517,6 +1565,7 @@ function init() {
   $("cobranzaCopy").addEventListener("click", copyCobranza);
   $("cobranzaWa").addEventListener("click", sendCobranzaWA);
   $("cobranzaQrSave").addEventListener("click", saveQrImage);
+  bindNumChips();
 
   // hoja de acciones del teléfono
   $("psCall").addEventListener("click", function () {
