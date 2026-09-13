@@ -95,7 +95,7 @@ function buildRows(cols, records) {
     var ownerRaw = cell(m.ownerIdx);
     var statusRaw = cell(m.statusIdx);
     var status = statusOf(statusRaw);
-    var phones = extractPhones(cell(m.phoneIdx));
+    var phones = extractPhones(cell(m.phoneIdx), APP_CONFIG.COUNTRY_CODE);
     var plates = extractPlates(cell(m.plateIdx));
 
     var block = collapseSpaces(blockRaw);

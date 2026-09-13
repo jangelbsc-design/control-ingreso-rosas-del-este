@@ -61,14 +61,17 @@ function parseCSV(text) {
 }
 
 /* ---------- Teléfonos ---------- */
-/* Extrae los números separados por " - ", "(", "/", comas... */
-function extractPhones(value) {
+/* Extrae los números separados por " - ", "(", "/", comas, ";"...
+   Si countryCode viene dado (ej. "591"), lo quita para guardar el número local (sin prefijo). */
+function extractPhones(value, countryCode) {
   if (value == null) return [];
   var raw = String(value);
-  var tokens = raw.split(/[\s\-–—/(),]+/);
+  var tokens = raw.split(/[\s\-–—/();,]+/);
+  var cc = String(countryCode || "");
   var out = [];
   tokens.forEach(function (t) {
     var d = t.replace(/\D/g, "");
+    if (cc && d.indexOf(cc) === 0) d = d.slice(cc.length);
     if (d.length >= 7 && out.indexOf(d) === -1) out.push(d);
   });
   return out;
