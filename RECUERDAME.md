@@ -9,12 +9,12 @@
 Es una web app (instalable en el celular como una app normal) para que el guardia de turno **busque al instante** a cualquier vecino escribiendo **el manzano, el nombre, el celular o la placa del vehículo**. Al tocar un resultado se abre la **ficha del vecino** con:
 
 - Estado: **VIGENTE** (verde) o **EN MORA** (rojo)
-- Propietario(s)
+- Propietario(s) — la tarjeta y la ficha muestran **"Manzano X - Lote Y"** (ej. `M21 - 21` → "Manzano 21 - Lote 21")
 - Placa(s) del vehículo en formato "chapa"
-- Teléfono(s) con botones de **Llamar** y **WhatsApp**
+- Teléfono(s) con botones de **Llamar** y **WhatsApp** (uno por cada número; acepta 2 o 3 números de referencia en una misma casilla)
 - Botón **Registrar ingreso** que guarda el evento en la bitácora
 
-También incluye una **Bitácora de ingresos** (con hora y fecha, exportable a CSV) y un **ingreso manual** para visitantes o vehículos externos. En la cabecera se muestra tu logo (`imágenes/logo.webp`); si lo quitas o renombras, la app usa por defecto un escudo verde.
+También incluye una **Bitácora de ingresos** (con hora y fecha, exportable a CSV) y un **registro manual** para visitantes o vehículos externos. Abajo hay **dos botones separados: "Registro" y "Bitácora"**. En la cabecera se muestra tu logo (`imágenes/logo.webp`); si lo quitas o renombras, la app usa por defecto un escudo verde.
 
 **Colores de la urbanización usados:** verde (#0e7a3d) para VIGENTE, rojo (#d92d20) para EN MORA, blanco y negro para el resto del diseño.
 
@@ -69,6 +69,21 @@ La app **reconoce las columnas automáticamente** por su nombre. Reconoce cualqu
 
 Tu pestaña `PROPIETARIOS` tiene exactamente: `MANZANO · PROPIETARIO · CELULAR · ESTADO · PLACA`. Solo quedó pendiente tu parte: **llenar la columna PLACA** con las carrocerías de cada vecino.
 
+### 3.4 Números de celular — IMPORTANTE
+La columna **CELULAR** debe estar formateada como **"Texto sin formato"** para que muestre los números múltiples:
+
+1. En la hoja, haz clic en la **letra de la columna CELULAR** para seleccionarla toda.
+2. Menú **Formato → Número → Texto sin formato** (Plain text).
+
+Si la columna queda como *número*, Google **borra** (envía vacías) las casillas que tienen letras o guiones, y esos teléfonos no aparecen en la app.
+
+**Cómo escribir 2 o 3 números de referencia** (en una misma casilla): separa con ` - `, por ejemplo:
+```
+78500613 - 70905191
+76399492 - 73133074 - 76605336
+```
+También funcionan `7603 6960 - 7903 9893`, `76-036-960` o `+591 7123-4567`. La app reconoce cada número, los muestra separados (sin el prefijo +591) y al tocarlos ofrece Llamar / WhatsApp con el prefijo del país (591).
+
 ---
 
 ## 4. Trabajar sin conexión (offline)
@@ -122,12 +137,16 @@ git push -u origin main
 ```
 
 ### 6.2 Activar GitHub Pages (para que la app quede publicada como web)
-1. En el repositorio: **Settings → Pages**.
-2. En *Source* elige **Deploy from a branch**, rama `main`, carpeta `/ (root)`.
-3. Guardar. Espera 1–2 minutos.
-4. Te dará una URL tipo: `https://TU_USUARIO.github.io/control-ingreso-rosas-del-este/`
+Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a la rama `main`, el archivo `.github/workflows/deploy-pages.yml` ejecuta un despliegue automático y 1–2 minutos después la URL ya tiene la versión nueva:
+
+`https://jangelbsc-design.github.io/control-ingreso-rosas-del-este/`
+
+- **NO se necesita crear un "Release"** para actualizar la web; los Releases no afectan a GitHub Pages.
+- Si algún día hubiera que reconfigurarlo: **Settings → Pages → Source: "GitHub Actions"** (el workflow se encarga).
 
 **Instrucciones para el equipo de seguridad:** esa URL se abre en el celular y se instala como en el punto 5 (con Chrome/Safari). Añadir "Agregar a pantalla de inicio".
+
+> **Actualizar la app instalada en el celular:** al publicar cambios, el celular tarda un par de aperturas en actualizar su copia. Cierra la app, ábrela, espera ~10 segundos y recarga una vez más. Si ves pantalla vieja o "0 vecinos", cierra y abre 1 vez más.
 
 ---
 
@@ -146,12 +165,14 @@ git push -u origin main
 | Problema | Solución |
 |---|---|
 | "Sin datos · Verifica la hoja" en rojo | La hoja no está compartida como *cualquiera con el enlace → Lector*, o cambió el `SPREADSHEET_ID`/`SHEET_NAME` en `config.js`. |
-| Encontró datos de otra pestaña | El `SHEET_NAME` en `config.js` no coincide con la pestaña correcta. |
+| La app abre con **0 vecinos** | Esto pasaba cuando la app no pedía encabezados a Google. Ya está corregido; si vuelve, cierra la app y ábrela 1–2 veces (actualiza la copia guardada). |
+| Un teléfono **no aparece** aunque esté en la hoja | La columna CELULAR está como *número*: ponla en **Texto sin formato** (ver punto 3.4) para que no borre las casillas con guiones. |
+| Encontrar datos de otra pestaña | El `SHEET_NAME` en `config.js` no coincide con la pestaña correcta. |
 | No aparece la placa | La columna `PLACA` está vacía en la hoja para ese vecino. La ficha muestra "Sin placa registrada". |
 | Búsqueda con tildes no encuentra | No importa: la app ignora mayúsculas, tildes y guiones. |
 | "Datos locales · …" en amarillo | Estás viendo datos guardados sin conexión; conecta e internet y recarga. |
 | Cambié la hoja y no se refleja | Recarga la página (F5). Si se usó caché, los datos se actualizan al recargar con internet. |
-| Celfone nuevo sin datos | Ábrela una vez con internet para que guarde la copia. |
+| Celular nuevo sin datos | Ábrela una vez con internet para que guarde la copia. |
 
 ---
 
@@ -165,4 +186,4 @@ git push -u origin main
 
 ---
 
-*Última actualización: septiembre 2026. El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
