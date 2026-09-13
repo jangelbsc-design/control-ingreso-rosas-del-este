@@ -225,7 +225,6 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--verde-claro); color: var(--verde-osc);
 }
 .btn-outline-red { background: transparent; border: 1.5px solid var(--rojo); color: var(--rojo-osc); }
-.btn-outline-light { background: transparent; border: 1.5px solid rgba(255,255,255,.4); color: var(--blanco); }
 .w-full { width: 100%; }
 
 /* ---------------- Subcabeceras de vistas ---------------- */
@@ -263,11 +262,6 @@ button { font-family: inherit; cursor: pointer; }
 .bit-note { margin-top: 7px; font-size: 12.5px; color: var(--gris-texto); line-height: 1.4; }
 .bit-note span { color: var(--negro); font-weight: 600; }
 .bit-via { font-size: 11px; color: #b0b4b9; font-weight: 600; }
-.bit-del {
-  position: absolute; top: 10px; right: 10px;
-  background: transparent; border: 0; color: #b0b4b9; padding: 6px;
-}
-.bit-del:active { color: var(--rojo); }
 
 /* ---------------- Formulario manual ---------------- */
 .entry-form {
@@ -483,7 +477,6 @@ body.locked { overflow: hidden; }
 .login-card form .btn { margin-top: 4px; }
 .login-foot { margin-top: 18px; font-size: 12px; color: var(--gris-texto); line-height: 1.5; }
 .login-error { margin: 10px 0 2px; }
-.footer-ver { display: flex; align-items: center; gap: 6px; }
 .btn-ghost {
   background: transparent; color: var(--gris-texto);
   border: 0; padding: 12px; font-size: 14px; font-weight: 700; margin-top: 8px;

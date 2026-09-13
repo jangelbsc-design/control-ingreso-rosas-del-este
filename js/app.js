@@ -157,7 +157,7 @@ function mapColumns(headers) {
       var hit = rule.aliases.indexOf(n) !== -1;
       if (!hit && rule.matchAny) {
         rule.matchAny.forEach(function (frag) {
-          if (!hit && fragments(n)) {
+          if (!hit && n) {
             var nf = n;
             if (nf.indexOf(frag) !== -1 && rule.key === "block" && nf.indexOf("mazo") !== -1) hit = true;
             if (nf.indexOf(frag) !== -1 && (rule.key === "owner" || rule.key === "phone" || rule.key === "plate")) hit = true;
@@ -188,8 +188,6 @@ function mapColumns(headers) {
 
   return { statusIdx: statusIdx, blockIdx: map.block, ownerIdx: map.owner, phoneIdx: map.phone, plateIdx: map.plate, extras: extras };
 }
-
-function fragments(n) { return n; }
 
 /* ---------------- Procesado de registros ---------------- */
 function buildRows(cols, records) {
@@ -528,8 +526,6 @@ function cardFor(r) {
   foot.className = "card-foot";
   var hint = document.createElement("span");
   hint.className = "card-hint";
-  var n = 0;
-  if (r.extra.length) n += r.extra.length;
   hint.textContent = (r.plates.length ? r.plates.length + " placa" + (r.plates.length > 1 ? "s" : "") + " · " : "") +
     "Toca para ver ficha";
   foot.appendChild(hint);
@@ -999,43 +995,6 @@ function addBitacora(data) {
   flushPending();
 }
 
-function removeBitacora(id) {
-  if (!id) return;
-  setBitacora(getBitacora().filter(function (e) { return e.id !== id; }));
-  setPending(getPending().filter(function (e) { return e.id !== id; }));
-  renderBitacora();
-  var url = bitacoraURL();
-  if (url) {
-    fetch(url, { method: "POST", body: JSON.stringify({ action: "delete", id: id }), cache: "no-store" })
-      .catch(function () { /* sin red, se reintenta no es crítico */ });
-  }
-}
-
-function clearTodayBitacora() {
-  var today = sameDateKey(Date.now());
-  var removed = [];
-  var out = [];
-  getBitacora().forEach(function (e) {
-    if (e.dateLabel === today) removed.push(e.id); else out.push(e);
-  });
-  setBitacora(out);
-  setPending(getPending().filter(function (e) { return e.dateLabel !== today; }));
-  renderBitacora();
-  toast(removed.length ? "Bitácora de hoy vaciada" : "No hay registros para hoy");
-
-  var url = bitacoraURL();
-  if (url && removed.length) {
-    var i = 0;
-    (function next() {
-      if (i >= removed.length) return;
-      var id = removed[i++];
-      fetch(url, { method: "POST", body: JSON.stringify({ action: "delete", id: id }), cache: "no-store" })
-        .catch(function () { /* sin red */ })
-        .then(next);
-    })();
-  }
-}
-
 /* ---------------- Sincronización entre dispositivos ---------------- */
 var syncing = false;
 
@@ -1298,11 +1257,6 @@ function switchView(view) {
   } else if (view === "admin") {
     refreshAdminView();
   }
-}
-
-/* ---------------- SVG iconos ---------------- */
-function svgTrash() {
-  return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
 }
 
 /* ---------------- Toast ---------------- */

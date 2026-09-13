@@ -31,13 +31,6 @@ function formatBlockLabel(value) {
   return s;
 }
 
-function toTitleCase(value) {
-  var s = collapseSpaces(value);
-  return s.replace(/\w\S*/g, function (t) {
-    return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
-  });
-}
-
 /* ---------- Parser CSV compatible con RFC 4180 ---------- */
 function parseCSV(text) {
   var rows = [];
@@ -156,12 +149,6 @@ function nowStamp() {
     time: pad2(new Date().getHours()) + ":" + pad2(new Date().getMinutes()) + ":" + pad2(new Date().getSeconds()),
     dateLabel: pad2(new Date().getDate()) + "/" + pad2(new Date().getMonth() + 1) + "/" + new Date().getFullYear()
   };
-}
-
-function isToday(ts) {
-  var d = new Date(ts);
-  var n = new Date();
-  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
 }
 
 function sameDateKey(ts) {
