@@ -199,7 +199,7 @@ Para que los registros de un guardia **se vean al instante en cualquier otro cel
    ```
 8. Vuelve a abrir la app en cada celular (cierra/abre una vez). En la **Bitácora** debe aparecer el indicador **"En línea"**.
 
-La app crea automáticamente una pestaña **`BITACORA`** en tu hoja con las columnas: `ID · FECHA · HORA · MANZANO · PROPIETARIO · VISITANTE · PLACA · NOTA · ORIGEN`. Ahí podrás ver desde tu PC todos los ingresos en vivo, y también quedan en la hoja como respaldo.
+La app usa **tu pestaña `bitacora`** (en minúsculas; si no existe, la crea sola). Añade el encabezado (si está vacía) y guarda cada ingreso en las columnas: `ID · FECHA · HORA · MANZANO · PROPIETARIO · VISITANTE · PLACA · NOTA · ORIGEN`. Ahí podrás ver desde tu PC todos los ingresos en vivo, y también quedan en la hoja como respaldo.
 
 > **Cómo funciona por dentro:** cada celular guarda sus registros localmente (para funcionar sin internet) y los **envía al web app**, que los escribe en la hoja. La app **pide los registros cada minuto** (y al abrirla) y los mezcla, así todos ven lo mismo. Si un celular está desconectado, guarda la entrada en espera y la envía en cuanto vuelve la red.
 

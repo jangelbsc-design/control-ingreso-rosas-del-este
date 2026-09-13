@@ -27,14 +27,15 @@
  *  7) Pega esa URL en  js/config.js  como  BITACORA_URL  y sube
  *     el cambio (git push).
  *
- *  La app creará automáticamente una pestaña llamada "BITACORA"
- *  en tu hoja con las columnas:
+ *  La app usará TU pestaña **bitacora** (en minúsculas, la que ya
+ *  creaste). Si no existiera, la crea automáticamente con estas
+ *  columnas:
  *  ID · FECHA · HORA · MANZANO · PROPIETARIO · VISITANTE ·
  *  PLACA · NOTA · ORIGEN
  * ================================================================
  */
 
-var TAB = "BITACORA";
+var TAB = "bitacora";
 var HEADERS = ["ID", "FECHA", "HORA", "MANZANO", "PROPIETARIO", "VISITANTE", "PLACA", "NOTA", "ORIGEN"];
 
 function getTab_() {
