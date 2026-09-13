@@ -32,14 +32,20 @@
  *  columnas:
  *  ID · FECHA · HORA · MANZANO · PROPIETARIO · VISITANTE ·
  *  PLACA · NOTA · ORIGEN
+ *
+ *  IMPORTANTE: el script puede estar suelto (creado desde
+ *  script.google.com) o pegado dentro de la hoja. Funciona en
+ *  ambos casos porque usa la URL de abajo. Si tu documento es
+ *  otro, cambia el ID en SPREADSHEET_URL.
  * ================================================================
  */
 
+var SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO/edit";
 var TAB = "bitacora";
 var HEADERS = ["ID", "FECHA", "HORA", "MANZANO", "PROPIETARIO", "VISITANTE", "PLACA", "NOTA", "ORIGEN"];
 
 function getTab_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
   var sh = ss.getSheetByName(TAB);
   if (!sh) {
     sh = ss.insertSheet(TAB);
