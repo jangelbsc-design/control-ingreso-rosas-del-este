@@ -224,7 +224,7 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
    - `USUARIO` | `CONTRASEÑA` (y, opcionalmente, una 3.ª columna `ROL`).
    - Ejemplo: la primera fila puede ser el encabezado; los usuarios van debajo (`Admin | 6567`, `Ingreso | 7845`, …).
    - Si el usuario (o el rol) contiene la palabra *"admin"*, la app lo trata como **administrador**.
-2. **Para iniciar sesión:** en la app, **toca la versión** (el "v7" de la Bitácora) o el **logo**. Se abre el formulario: usuario + contraseña. La sesión **queda guardada en ese celular** mientras no la cierres (botón "Cerrar sesión" en el mismo lugar).
+2. **Para iniciar sesión:** en la app, **toca la versión** (el "v7" de la Bitácora) o el **logo**. Se abre el formulario: usuario + contraseña. La sesión **queda guardada en ese celular** mientras no la cierres (botón "Cerrar sesión" en el mismo lugar). Junto a la versión se muestra quién está con la sesión activa (ej. `v7 · Admin · Admin` o `v7 · Ingreso`).
 3. **El QR de pago:** tu imagen del QR está guardada en la carpeta de la app como **`imágenes/QR pago expensas.jpeg`** (puedes cambiarla en `js/config.js` con `QR_IMAGE`). Al abrir el recordatorio, la app muestra el QR y te permite **Guardar QR**.
 4. **Los dos mensajes** (se arman con saludo según la hora + **nombre del vecino + manzano y lote**):
    - **En mora ("Cobranza"):** invita a regularizar el pago, menciona el QR adjunto, los beneficios de estar al día y firma **Administración Rosas del Este Zona Sur**.

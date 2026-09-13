@@ -1283,6 +1283,17 @@ function submitManualEntry(ev) {
 }
 
 /* ---------------- Init ---------------- */
+function sessionLabel() {
+  var s = getSession();
+  if (!s) return "";
+  return " · " + s.user + (s.role === "admin" ? " · Admin" : "");
+}
+
+function refreshSessionTag() {
+  var verEl = $("appVer");
+  if (verEl) verEl.textContent = "v" + (APP_CONFIG.APP_VERSION || "?") + sessionLabel();
+}
+
 function init() {
   // fecha y hora del día
   var days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
@@ -1297,8 +1308,7 @@ function init() {
   renderToday();
   setInterval(renderToday, 30000);
 
-  var verEl = $("appVer");
-  if (verEl) verEl.textContent = "v" + (APP_CONFIG.APP_VERSION || "?");
+  refreshSessionTag();
 
   // búsqueda
   var searchInput = $("searchInput");
@@ -1364,12 +1374,14 @@ function init() {
       setSession(match.user, match.role);
       closeLogin();
       toast(match.role === "admin" ? "Sesión de administrador iniciada" : "Sesión iniciada");
+      refreshSessionTag();
       if (state.selected) openDetail(state.selected);
     });
   });
   $("sessionLogout").addEventListener("click", function () {
     clearSession();
     toast("Sesión cerrada");
+    refreshSessionTag();
     openLogin();
     if (state.selected) openDetail(state.selected);
   });
