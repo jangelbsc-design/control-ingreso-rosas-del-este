@@ -59,7 +59,7 @@ Todo se configura en **`js/config.js`**:
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado) | `0` |
 | `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
 | `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `7` |
-| `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/qr_pago.png` |
+| `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/QR pago expensas.jpeg` |
 
 ### 3.3 Columnas de la hoja
 La app **reconoce las columnas automáticamente** por su nombre. Reconoce cualquier de estos encabezados:
@@ -185,7 +185,7 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 | Registro no aparece en otros celulares | Verifica que `BITACORA_URL` esté en `config.js` (sección 10) y que en la bitácora diga **"En línea"**. Si el otro teléfono muestra una versión distinta (ej. `v5` en vez de `v6`), está desactualizado: cierra y abre la app 1–2 veces con internet (ver "Actualizar la app instalada"). |
 | No veo el botón de **cobranza** en la ficha | Tienes que estar **en mora** (tarjeta roja) y con la **sesión de admin iniciada** (sección 11): toca la versión o el logo → `Admin` + tu contraseña → "Cerrar sesión" para salir. |
 | El botón dice **Recordatorio de pago** y no cobranza | Correcto: es el botón para vecinos **vigentes**. En mora dice "Enviar recordatorio de cobranza". |
-| No aparece el **QR** en el recordatorio | Guarda tu imagen del QR como `imágenes/qr_pago.png` (o ajusta `QR_IMAGE` en `config.js`) y publica. Los mensajes siguen funcionando sin él. |
+| No aparece el **QR** en el recordatorio | Guarda tu imagen del QR en la ruta de `QR_IMAGE` en `config.js` (hoy `imágenes/QR pago expensas.jpeg`) y publica. Los mensajes siguen funcionando sin él. |
 | ¿Cómo envío WhatsApp con el **QR adjunto**? | Toca **WhatsApp** y usa el botón **Compartir** del teléfono eligiendo WhatsApp: la foto del QR viaja adjunta con el mensaje. Si no, guarda el QR y adjúntalo manualmente. |
 | ¿Cómo borro un **registro de la bitácora**? | Desde la app no se puede (se quitaron los botones a propósito). Se elimina desde tu hoja de cálculo: pestaña `bitacora`, borra la fila. El mismo celular lo verá desaparecer en ~1 minuto. |
 
@@ -225,7 +225,7 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
    - Ejemplo: la primera fila puede ser el encabezado; los usuarios van debajo (`Admin | 6567`, `Ingreso | 7845`, …).
    - Si el usuario (o el rol) contiene la palabra *"admin"*, la app lo trata como **administrador**.
 2. **Para iniciar sesión:** en la app, **toca la versión** (el "v7" de la Bitácora) o el **logo**. Se abre el formulario: usuario + contraseña. La sesión **queda guardada en ese celular** mientras no la cierres (botón "Cerrar sesión" en el mismo lugar).
-3. **El QR de pago:** guarda tu imagen QR en la carpeta de la app como **`imágenes/qr_pago.png`** (puedes cambiarla en `js/config.js` con `QR_IMAGE`). Al abrir el recordatorio, la app muestra el QR y te permite **Guardar QR**.
+3. **El QR de pago:** tu imagen del QR está guardada en la carpeta de la app como **`imágenes/QR pago expensas.jpeg`** (puedes cambiarla en `js/config.js` con `QR_IMAGE`). Al abrir el recordatorio, la app muestra el QR y te permite **Guardar QR**.
 4. **Los dos mensajes** (se arman con saludo según la hora + **nombre del vecino + manzano y lote**):
    - **En mora ("Cobranza"):** invita a regularizar el pago, menciona el QR adjunto, los beneficios de estar al día y firma **Administración Rosas del Este Zona Sur**.
    - **Vigente ("Recordatorio de pago"):** *"Buenos días, estimado [Nombre] de Rosas del Este ([Manzano X - Lote Y]). Le enviamos este recordatorio para que pueda realizar el pago de sus expensas mediante el QR adjunto. Si usted ya realizó el pago, por favor ignore este mensaje. ¡Muchas gracias por su puntualidad y que tenga un excelente día!"* + firma.

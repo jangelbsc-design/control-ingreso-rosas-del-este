@@ -63,5 +63,5 @@ var APP_CONFIG = {
   /* Imagen del QR de pago que se adjunta a los recordatorios
      (cobranza para morosos y recordatorio para vigentes).
      Guarda tu archivo en esa ruta, dentro de la carpeta de la app. */
-  QR_IMAGE: "imágenes/qr_pago.png"
+  QR_IMAGE: "imágenes/QR pago expensas.jpeg"
 };
