@@ -16,6 +16,8 @@ Es una web app (instalable en el celular como una app normal) para que el guardi
 
 También incluye una **Bitácora de ingresos** (con hora y fecha, exportable a CSV) y un **registro manual** para visitantes o vehículos externos. Abajo hay **dos botones separados: "Registro" y "Bitácora"**. En la cabecera se muestra tu logo (`imágenes/logo.webp`); si lo quitas o renombras, la app usa por defecto un escudo verde.
 
+La app se sincroniza con los registros de todos los celulares (sección 10) y tiene un **acceso de administración** con tu pestaña `Usuarios` que permite al Admin **enviar recordatorios de cobranza por WhatsApp** a los vecinos en mora (sección 11).
+
 **Colores de la urbanización usados:** verde (#0e7a3d) para VIGENTE, rojo (#d92d20) para EN MORA, blanco y negro para el resto del diseño.
 
 ---
@@ -52,8 +54,11 @@ Todo se configura en **`js/config.js`**:
 |---|---|---|
 | `SPREADSHEET_ID` | El ID que está en el enlace de tu hoja (`.../d/<AQUÍ>/edit`) | `1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO` |
 | `SHEET_NAME` | Nombre exacto de la pestaña con la base de vecinos | `PROPIETARIOS` |
+| `SHEET_USERS` | Pestaña con los usuarios y contraseñas del login | `Usuarios` |
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado) | `0` |
+| `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
+| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `6` |
 
 ### 3.3 Columnas de la hoja
 La app **reconoce las columnas automáticamente** por su nombre. Reconoce cualquier de estos encabezados:
@@ -176,7 +181,9 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 | En la bitácora no se ve la **Nota** ni el **propietario** | Ya está corregido: la bitácora ahora muestra el propietario, el visitante, la placa, la nota y el origen. Si aún ves datos viejos, cierra y abre la app una vez. |
 | En Bitácora dice **"Local"** | Falta activar la sincronización: sigue la **sección 10**. |
 | En Bitácora dice **"Sin conexión"** | La app no pudo hablar con el web app (revisa red o BITACORA_URL). Se reintenta sola cada minuto. |
-| Registro no aparece en otros celulares | Verifica que `BITACORA_URL` esté en `config.js` (sección 10) y que en la bitácora diga **"En línea"**. |
+| Registro no aparece en otros celulares | Verifica que `BITACORA_URL` esté en `config.js` (sección 10) y que en la bitácora diga **"En línea"**. Si el otro teléfono muestra una versión distinta (ej. `v5` en vez de `v6`), está desactualizado: cierra y abre la app 1–2 veces con internet (ver "Actualizar la app instalada"). |
+| No veo el botón de **cobranza** en la ficha | Tienes que estar **en mora** (tarjeta roja) y con la **sesión de admin iniciada** (sección 11): toca la versión o el logo → `Admin` + tu contraseña → "Cerrar sesión" para salir. |
+| ¿Cómo borro un **registro de la bitácora**? | Desde la app no se puede (se quitaron los botones a propósito). Se elimina desde tu hoja de cálculo: pestaña `bitacora`, borra la fila. El mismo celular lo verá desaparecer en ~1 minuto. |
 
 ---
 
