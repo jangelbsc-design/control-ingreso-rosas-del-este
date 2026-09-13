@@ -594,11 +594,7 @@ function call(number) {
 }
 
 function whatsapp(number, r) {
-  var text = encodeURIComponent(
-    "Hola, control de ingreso de la Urbanización Rosas del Este" +
-    (r ? " · " + (r.block || "") + " · " + (r.ownerName || "") : "")
-  );
-  window.open("https://wa.me/" + number + "?text=" + text, "_blank");
+  window.open("https://wa.me/" + number, "_blank");
 }
 
 /* ---------------- Hoja de acciones del teléfono ---------------- */
