@@ -350,7 +350,11 @@ function loadCache() {
 }
 
 function loadData() {
+  if (state.loading) return;
+  state.loading = true;
   var tries = 0;
+  var line = $("countLine");
+  if (line && !state.loaded) line.textContent = "Cargando…";
 
   function attempt(err) {
     tries++;
@@ -368,8 +372,10 @@ function loadData() {
           state.rows = cache.rows;
           state.loaded = true;
           afterLoad();
-          return;
+        } else {
+          showNetError();
         }
+        state.loading = false;
         return;
       }
       finalize(result);
@@ -389,8 +395,22 @@ function loadData() {
     state.rows = rows;
     state.loaded = true;
     cacheRows(rows);
+    hideNetError();
     afterLoad();
+    state.loading = false;
   }
+}
+
+function showNetError() {
+  var el = $("netError");
+  var line = $("countLine");
+  if (line) line.textContent = "Sin conexión";
+  if (el) el.hidden = false;
+}
+
+function hideNetError() {
+  var el = $("netError");
+  if (el) el.hidden = true;
 }
 
 function afterLoad() {
@@ -971,6 +991,22 @@ function setPending(q) {
   try { localStorage.setItem(PENDING_KEY, JSON.stringify(q)); } catch (e) { /* ignorar */ }
 }
 
+/* Borrados pendientes: si el guardia borra un registro sin internet,
+   el borrado se anota aquí para NO revivir el registro al sincronizar
+   y para enviarlo al servidor cuando haya conexión. */
+var DELETED_KEY = "rde_deleted_v1";
+
+function getDeleted() {
+  try {
+    var raw = localStorage.getItem(DELETED_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+function setDeleted(list) {
+  try { localStorage.setItem(DELETED_KEY, JSON.stringify(list)); } catch (e) { /* ignorar */ }
+}
+
 function addBitacora(data) {
   var st = nowStamp();
   var entry = {
@@ -1003,11 +1039,38 @@ function removeBitacora(id) {
   setPending(getPending().filter(function (e) { return e.id !== id; }));
   renderBitacora($("bitToday").checked);
   toast("Registro eliminado");
+  var dels = getDeleted();
+  if (dels.indexOf(id) === -1) dels.push(id);
+  setDeleted(dels);
+  flushDeletes();
+}
+
+/* Envía al servidor los borrados pendientes, de a uno. Los que fallan
+   (sin red) se mantienen en la lista para reintentar en el próximo ciclo. */
+var deleting = false;
+
+function flushDeletes() {
   var url = bitacoraURL();
-  if (url) {
-    fetch(url, { method: "POST", body: JSON.stringify({ action: "delete", id: id }), cache: "no-store" })
-      .catch(function () { /* sin red, se reintenta no es crítico */ });
-  }
+  if (!url || deleting) return;
+  var dels = getDeleted();
+  if (!dels.length) return;
+  deleting = true;
+  var id = dels[0];
+  fetch(url, {
+    method: "POST",
+    body: JSON.stringify({ action: "delete", id: id }),
+    cache: "no-store"
+  }).then(function (r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  }).then(function (j) {
+    if (!j || !j.ok) throw new Error("no ok");
+    setDeleted(getDeleted().filter(function (x) { return x !== id; }));
+    deleting = false;
+    flushDeletes();
+  }).catch(function () {
+    deleting = false;
+  });
 }
 
 /* ---------------- Sincronización entre dispositivos ---------------- */
@@ -1117,10 +1180,12 @@ function fetchRemote(onDone) {
     .then(function (list) {
       if (!Array.isArray(list)) throw new Error("formato");
       var byId = {};
+      var delsById = {};
+      getDeleted().forEach(function (id) { delsById[id] = 1; });
       getBitacora().forEach(function (x) { if (x.id) byId[x.id] = x; });
       list.forEach(function (x) {
         var e = normalizeRemote(x);
-        if (e.id && !byId[e.id]) byId[e.id] = e;
+        if (e.id && !byId[e.id] && !delsById[e.id]) byId[e.id] = e;
       });
       var merged = Object.keys(byId).map(function (k) { return byId[k]; });
       merged.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
@@ -1137,6 +1202,7 @@ function fetchRemote(onDone) {
 
 function syncBitacora() {
   flushPending();
+  flushDeletes();
   if (bitacoraURL()) fetchRemote();
   else updateSyncStatus(null);
 }
@@ -1583,6 +1649,13 @@ function init() {
   });
 
   loadData();
+
+  // reintento manual o automático cuando la conexión vuelve
+  var netRetry = $("netRetry");
+  if (netRetry) netRetry.addEventListener("click", loadData);
+  window.addEventListener("online", function () {
+    if (!state.loaded) loadData();
+  });
 
   if (APP_CONFIG.AUTO_REFRESH_MIN && APP_CONFIG.AUTO_REFRESH_MIN > 0) {
     setInterval(function () { loadData(); }, APP_CONFIG.AUTO_REFRESH_MIN * 60000);

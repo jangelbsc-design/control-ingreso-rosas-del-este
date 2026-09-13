@@ -203,6 +203,20 @@ button { font-family: inherit; cursor: pointer; }
 .empty-state p + p { margin-top: 4px; font-size: 13px; }
 .empty-state strong { color: var(--negro); }
 
+/* ---------------- Aviso sin conexión ---------------- */
+.net-error {
+  text-align: center; color: var(--gris-texto);
+  padding: 36px 20px; font-size: 14px;
+  background: var(--rojo-claro);
+  border: 1px solid rgba(196, 37, 38, .3);
+  border-radius: var(--radio);
+  margin-top: 10px;
+}
+.net-error svg { color: var(--rojo); display: block; margin: 0 auto 12px; }
+.net-error p + p { margin-top: 5px; font-size: 13px; }
+.net-error strong { color: var(--rojo-osc); font-size: 16px; }
+.net-error .btn { margin-top: 16px; }
+
 /* ---------------- Botones ---------------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
