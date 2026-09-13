@@ -189,7 +189,7 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 | El botón dice **Recordatorio de pago** y no cobranza | Correcto: es el botón para vecinos **vigentes**. En mora dice "Enviar recordatorio de cobranza". |
 | No aparece el **QR** en el recordatorio | Guarda tu imagen del QR en la ruta de `QR_IMAGE` en `config.js` (hoy `imágenes/QR pago expensas.jpeg`) y publica. Los mensajes siguen funcionando sin él. |
 | ¿Cómo envío WhatsApp con el **QR adjunto**? | Toca **WhatsApp** y usa el botón **Compartir** del teléfono eligiendo WhatsApp: la foto del QR viaja adjunta con el mensaje. Si no, guarda el QR y adjúntalo manualmente. |
-| ¿Cómo borro un **registro de la bitácora**? | Desde la app no se puede (se quitaron los botones a propósito). Se elimina desde tu hoja de cálculo: pestaña `bitacora`, borra la fila. El mismo celular lo verá desaparecer en ~1 minuto. |
+| ¿Cómo borro un **registro de la bitácora**? | Solo el **Admin** ve un ícono de basurero (🗑) en cada registro de la Bitácora. Lo toca, confirma y el registro se borra de todos los celulares y de la hoja `bitacora`. También puedes borrar la fila directamente en la hoja. |
 
 ---
 
@@ -249,4 +249,4 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
 
 ---
 
-*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, y **borrado de registros de la bitácora solo para el Admin** — sección 11). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*

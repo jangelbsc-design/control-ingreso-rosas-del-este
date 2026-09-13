@@ -93,6 +93,7 @@ function onLoginSuccess(match) {
   toast(match.role === "admin" ? "Sesión de administrador iniciada" : "Sesión iniciada");
   refreshSessionTag();
   refreshAdminView();
+  if (!$("viewBitacora").hidden) renderBitacora($("bitToday").checked);
   if (state.selected) openDetail(state.selected);
 }
 
@@ -995,6 +996,20 @@ function addBitacora(data) {
   flushPending();
 }
 
+function removeBitacora(id) {
+  if (!id) return;
+  if (typeof confirm === "function" && !confirm("¿Eliminar este registro de la bitácora?")) return;
+  setBitacora(getBitacora().filter(function (e) { return e.id !== id; }));
+  setPending(getPending().filter(function (e) { return e.id !== id; }));
+  renderBitacora($("bitToday").checked);
+  toast("Registro eliminado");
+  var url = bitacoraURL();
+  if (url) {
+    fetch(url, { method: "POST", body: JSON.stringify({ action: "delete", id: id }), cache: "no-store" })
+      .catch(function () { /* sin red, se reintenta no es crítico */ });
+  }
+}
+
 /* ---------------- Sincronización entre dispositivos ---------------- */
 var syncing = false;
 
@@ -1207,6 +1222,16 @@ function renderBitacora(filterToday) {
       item.appendChild(note);
     }
 
+    if (isAdmin()) {
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "bit-del";
+      del.setAttribute("aria-label", "Eliminar registro");
+      del.innerHTML = svgTrash();
+      del.addEventListener("click", function () { removeBitacora(e.id); });
+      item.appendChild(del);
+    }
+
     frag.appendChild(item);
   });
   wrap.appendChild(frag);
@@ -1257,6 +1282,11 @@ function switchView(view) {
   } else if (view === "admin") {
     refreshAdminView();
   }
+}
+
+/* ---------------- SVG iconos ---------------- */
+function svgTrash() {
+  return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
 }
 
 /* ---------------- Toast ---------------- */
