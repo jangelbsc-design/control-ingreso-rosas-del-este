@@ -66,6 +66,34 @@ function closeLogin() {
   document.body.classList.remove("locked");
 }
 
+/* Pantalla de inicio: bloquea la app hasta iniciar sesión */
+function showGate() {
+  $("gateError").hidden = true;
+  $("gateUser").value = "";
+  $("gatePass").value = "";
+  $("loginScreen").hidden = false;
+  document.body.classList.add("locked");
+  setTimeout(function () { $("gateUser").focus(); }, 90);
+}
+
+function hideGate() {
+  $("loginScreen").hidden = true;
+  document.body.classList.remove("locked");
+}
+
+function ensureGate() {
+  if (getSession()) hideGate(); else showGate();
+}
+
+function onLoginSuccess(match) {
+  setSession(match.user, match.role);
+  closeLogin();
+  hideGate();
+  toast(match.role === "admin" ? "Sesión de administrador iniciada" : "Sesión iniciada");
+  refreshSessionTag();
+  if (state.selected) openDetail(state.selected);
+}
+
 function roleOfUser(user, rol) {
   var u = normalizeText(user);
   var r = normalizeText(rol);
@@ -1371,19 +1399,26 @@ function init() {
     $("loginError").hidden = true;
     doLogin(user, pass, function (err, match) {
       if (err) { $("loginError").textContent = err.message; $("loginError").hidden = false; return; }
-      setSession(match.user, match.role);
-      closeLogin();
-      toast(match.role === "admin" ? "Sesión de administrador iniciada" : "Sesión iniciada");
-      refreshSessionTag();
-      if (state.selected) openDetail(state.selected);
+      onLoginSuccess(match);
     });
   });
   $("sessionLogout").addEventListener("click", function () {
     clearSession();
-    toast("Sesión cerrada");
-    refreshSessionTag();
-    openLogin();
-    if (state.selected) openDetail(state.selected);
+    closeLogin();
+    showGate();
+  });
+
+  // pantalla de inicio (login obligatorio)
+  $("gateForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var user = $("gateUser").value.trim();
+    var pass = $("gatePass").value;
+    if (!user || !pass) { $("gateError").textContent = "Ingresa usuario y contraseña."; $("gateError").hidden = false; return; }
+    $("gateError").hidden = true;
+    doLogin(user, pass, function (err, match) {
+      if (err) { $("gateError").textContent = err.message; $("gateError").hidden = false; return; }
+      onLoginSuccess(match);
+    });
   });
 
   // mensaje de cobranza
@@ -1469,6 +1504,9 @@ function init() {
       if (hadController) window.location.reload();
     });
   }
+
+  // bloqueo de la app: sin sesión no se puede usar
+  ensureGate();
 }
 
 document.addEventListener("DOMContentLoaded", init);

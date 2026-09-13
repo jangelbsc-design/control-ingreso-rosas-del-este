@@ -16,6 +16,41 @@
 </head>
 <body>
 
+  <!-- ============ PANTALLA DE INICIO (LOGIN OBLIGATORIO) ============ -->
+  <section id="loginScreen" class="login-screen" hidden>
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="imágenes/logo.webp" alt="" onload="this.nextElementSibling.style.display='none'"
+             onerror="this.remove()">
+        <svg viewBox="0 0 24 24" width="52" height="52" aria-hidden="true">
+          <path fill="#0e7a3d" d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4z"/>
+          <path fill="#ffffff" d="M12 3.5 5 6.7v4.3c0 4.6 3.1 9 7 10.3 3.9-1.3 7-5.7 7-10.3V6.7l-7-3.2z"/>
+          <path fill="#0e7a3d" d="m10.5 15-2.3-2.3 1.2-1.2 1.1 1.1 3.9-3.9 1.2 1.2z"/>
+        </svg>
+      </div>
+      <h1 class="login-title">Control de Ingreso</h1>
+      <p class="login-sub">Urbanización Rosas del Este · Zona Sur</p>
+
+      <form id="gateForm">
+        <label class="field">
+          <span>Usuario</span>
+          <input type="text" id="gateUser" autocomplete="username" autocapitalize="none"
+                 placeholder="Tu usuario">
+        </label>
+        <label class="field">
+          <span>Contraseña</span>
+          <input type="password" id="gatePass" autocomplete="current-password"
+                 placeholder="••••••">
+        </label>
+        <div id="gateError" class="login-error" hidden></div>
+        <button type="submit" class="btn btn-green btn-lg w-full">Ingresar</button>
+      </form>
+
+      <p class="login-foot">Uso exclusivo del personal de guardia y administración.<br>
+      La sesión queda guardada en este dispositivo.</p>
+    </div>
+  </section>
+
   <!-- ============ CABECERA ============ -->
   <header id="topbar">
     <div class="brand">

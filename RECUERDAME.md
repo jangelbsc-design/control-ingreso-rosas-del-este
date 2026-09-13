@@ -58,7 +58,7 @@ Todo se configura en **`js/config.js`**:
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado) | `0` |
 | `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
-| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `7` |
+| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `8` |
 | `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/QR pago expensas.jpeg` |
 
 ### 3.3 Columnas de la hoja
@@ -184,6 +184,8 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 | En Bitácora dice **"Sin conexión"** | La app no pudo hablar con el web app (revisa red o BITACORA_URL). Se reintenta sola cada minuto. |
 | Registro no aparece en otros celulares | Verifica que `BITACORA_URL` esté en `config.js` (sección 10) y que en la bitácora diga **"En línea"**. Si el otro teléfono muestra una versión distinta (ej. `v5` en vez de `v6`), está desactualizado: cierra y abre la app 1–2 veces con internet (ver "Actualizar la app instalada"). |
 | No veo el botón de **cobranza** en la ficha | Tienes que estar **en mora** (tarjeta roja) y con la **sesión de admin iniciada** (sección 11): toca la versión o el logo → `Admin` + tu contraseña → "Cerrar sesión" para salir. |
+| La app pide **iniciar sesión** al abrir | Correcto: es la protección. Escribe el usuario+contraseña (sección 11) la primera vez en ese dispositivo; luego queda guardado y ya no vuelve a pedirlo. |
+| Olvidé la contraseña de un guardia | Se cambia desde la pestaña `Usuarios` de la hoja: edita el valor de la casilla. El cambio aplica la próxima vez que ese celular inicie sesión. |
 | El botón dice **Recordatorio de pago** y no cobranza | Correcto: es el botón para vecinos **vigentes**. En mora dice "Enviar recordatorio de cobranza". |
 | No aparece el **QR** en el recordatorio | Guarda tu imagen del QR en la ruta de `QR_IMAGE` en `config.js` (hoy `imágenes/QR pago expensas.jpeg`) y publica. Los mensajes siguen funcionando sin él. |
 | ¿Cómo envío WhatsApp con el **QR adjunto**? | Toca **WhatsApp** y usa el botón **Compartir** del teléfono eligiendo WhatsApp: la foto del QR viaja adjunta con el mensaje. Si no, guarda el QR y adjúntalo manualmente. |
@@ -224,7 +226,8 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
    - `USUARIO` | `CONTRASEÑA` (y, opcionalmente, una 3.ª columna `ROL`).
    - Ejemplo: la primera fila puede ser el encabezado; los usuarios van debajo (`Admin | 6567`, `Ingreso | 7845`, …).
    - Si el usuario (o el rol) contiene la palabra *"admin"*, la app lo trata como **administrador**.
-2. **Para iniciar sesión:** en la app, **toca la versión** (el "v7" de la Bitácora) o el **logo**. Se abre el formulario: usuario + contraseña. La sesión **queda guardada en ese celular** mientras no la cierres (botón "Cerrar sesión" en el mismo lugar). Junto a la versión se muestra quién está con la sesión activa (ej. `v7 · Admin · Admin` o `v7 · Ingreso`).
+2. **Inicio de sesión obligatorio:** en cualquier dispositivo **nuevo**, la app se abre directamente en una **pantalla de inicio** y **no se puede usar hasta iniciar sesión** (usuario + contraseña de la pestaña `Usuarios`). Esa sesión **queda guardada en el celular**: las siguientes veces que lo abras ya no pedirá nada. El primer login de un celular necesita **internet** (para leer la pestaña `Usuarios`); luego la app funciona offline con la sesión guardada.
+3. **Cambiar de sesión / cerrar sesión:** en la Bitácora, **toca la versión** (el "v8") o el **logo**. Si estás logueado ves tu usuario y "Cerrar sesión"; si no, verás el formulario. Al cerrar sesión la app vuelve a bloquearse con la pantalla de inicio. Junto a la versión se muestra quién está activo (ej. `v8 · Admin · Admin` o `v8 · Ingreso`).
 3. **El QR de pago:** tu imagen del QR está guardada en la carpeta de la app como **`imágenes/QR pago expensas.jpeg`** (puedes cambiarla en `js/config.js` con `QR_IMAGE`). Al abrir el recordatorio, la app muestra el QR y te permite **Guardar QR**.
 4. **Los dos mensajes** (se arman con saludo según la hora + **nombre del vecino + manzano y lote**):
    - **En mora ("Cobranza"):** invita a regularizar el pago, menciona el QR adjunto, los beneficios de estar al día y firma **Administración Rosas del Este Zona Sur**.
@@ -235,11 +238,11 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
 
 ## 9. Mejoras posibles (para después)
 
-- 🔒 (hecho: hay usuarios con contraseña de la pestaña `Usuarios`; faltaría bloquear toda la app para guardias con rol de solo lectura).
+- 🔒 La app ya **exige iniciar sesión** para usarse (bloqueada con la pantalla de inicio, pestaña `Usuarios`). Pendiente si algún día se quiere: validación 100 % servidora (que las "contraseñas" no viajen como texto visible en la página pública).
 - 📷 Escáner de placas con la cámara (OCR).
 - 📊 Reportes mensuales de ingresos/salidas.
 - 🌐 Integración con N8N (si la administración usa flujos).
 
 ---
 
-*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, login de administración con la pestaña `Usuarios`, **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*

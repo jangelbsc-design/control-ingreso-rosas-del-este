@@ -428,6 +428,31 @@ body.locked { overflow: hidden; }
 .login-error { color: var(--rojo); font-size: 13px; font-weight: 700; text-align: center; margin: 4px 0; }
 .login-session { text-align: center; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--gris-linea); }
 .session-user { font-size: 14px; font-weight: 800; color: var(--verde-osc); margin-bottom: 10px; }
+
+/* ---------------- Pantalla de inicio (login obligatorio) ---------------- */
+.login-screen {
+  position: fixed; inset: 0; z-index: 90;
+  background: linear-gradient(160deg, #e8f4ec 0%, #f2f7ee 45%, #fbf7ef 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 22px;
+}
+.login-screen[hidden] { display: none; }
+.login-card {
+  width: 100%; max-width: 380px;
+  background: var(--blanco); border-radius: 20px;
+  box-shadow: 0 18px 48px rgba(14, 122, 61, .16);
+  padding: 30px 26px 26px; text-align: center;
+  animation: slideUp .28s ease;
+}
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.login-brand { display: flex; justify-content: center; margin-bottom: 10px; }
+.login-brand img { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; }
+.login-title { margin: 0; font-size: 21px; font-weight: 900; color: var(--verde-osc); }
+.login-sub { margin: 4px 0 18px; font-size: 13px; color: var(--gris-texto); }
+.login-card form { text-align: left; }
+.login-card form .btn { margin-top: 4px; }
+.login-foot { margin-top: 18px; font-size: 12px; color: var(--gris-texto); line-height: 1.5; }
+.login-error { margin: 10px 0 2px; }
 .footer-ver { display: flex; align-items: center; gap: 6px; }
 .btn-ghost {
   background: transparent; color: var(--gris-texto);
