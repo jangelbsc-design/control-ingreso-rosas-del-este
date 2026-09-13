@@ -48,5 +48,9 @@ var APP_CONFIG = {
      sincronización). Ejemplo completo:
      BITACORA_URL: "https://script.google.com/macros/s/XXXXXXXX/exec"
      ============================================================ */
-  BITACORA_URL: "https://script.google.com/macros/s/AKfycbzOfFgIHrSBJgYCAjAeI-FwlTFadtBq3jYLfTaWa69-426LmsDj2k0AFwx3XP4UQO4D/exec"
+  BITACORA_URL: "https://script.google.com/macros/s/AKfycbzOfFgIHrSBJgYCAjAeI-FwlTFadtBq3jYLfTaWa69-426LmsDj2k0AFwx3XP4UQO4D/exec",
+
+  /* Versión visible de la app (ajústala cada vez que cambies algo).
+     Sirve para comprobar de qué versión está cada teléfono. */
+  APP_VERSION: "5"
 };

@@ -1,5 +1,5 @@
 /* Service Worker · Urbanización Rosas del Este */
-var CACHE = "rde-app-v4";
+var CACHE = "rde-app-v5";
 var ASSETS = [
   "./",
   "./index.html",

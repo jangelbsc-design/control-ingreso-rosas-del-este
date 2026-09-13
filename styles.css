@@ -132,6 +132,8 @@ button { font-family: inherit; cursor: pointer; }
 .sync-off { color: var(--rojo); border: 1px solid var(--rojo); background: rgba(196, 37, 38, .07); }
 .sync-none { color: #b0b4b9; border: 1px solid #d3d6da; background: rgba(176, 180, 185, .08); }
 
+.ver-tag { font-size: 10px; color: #b0b4b9; margin-left: auto; }
+
 /* ---------------- Tarjetas ---------------- */
 .results { display: flex; flex-direction: column; gap: 10px; }
 .card {

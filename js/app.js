@@ -1080,6 +1080,9 @@ function init() {
   renderToday();
   setInterval(renderToday, 30000);
 
+  var verEl = $("appVer");
+  if (verEl) verEl.textContent = "v" + (APP_CONFIG.APP_VERSION || "?");
+
   // búsqueda
   var searchInput = $("searchInput");
   var searchClear = $("searchClear");
