@@ -91,6 +91,7 @@ function onLoginSuccess(match) {
   hideGate();
   toast(match.role === "admin" ? "Sesión de administrador iniciada" : "Sesión iniciada");
   refreshSessionTag();
+  refreshAdminView();
   if (state.selected) openDetail(state.selected);
 }
 
@@ -397,6 +398,7 @@ function afterLoad() {
   renderSummary();
   applyFilters();
   buildOwnerList();
+  refreshAdminView();
 }
 
 /* ---------------- Resumen ---------------- */
@@ -783,7 +785,12 @@ function openCobranza() {
 
 function closeCobranza() {
   $("cobranzaOverlay").hidden = true;
-  if (state.selected == null) document.body.classList.remove("locked");
+  if (state.selected == null) {
+    document.body.classList.remove("locked");
+  } else if ($("detailOverlay").hidden) {
+    document.body.classList.remove("locked");
+    state.selected = null;
+  }
 }
 
 function copyCobranza() {
@@ -1224,6 +1231,7 @@ function switchView(view) {
   $("viewDirectorio").hidden = view !== "directorio";
   $("viewBitacora").hidden = view !== "bitacora";
   $("viewForm").hidden = view !== "form";
+  $("viewAdmin").hidden = view !== "admin";
 
   var nav = document.querySelectorAll("#bottomNav .nav-item");
   nav.forEach(function (b) {
@@ -1239,6 +1247,8 @@ function switchView(view) {
     var inp = $("searchInput");
     inp.focus();
     inp.select();
+  } else if (view === "admin") {
+    refreshAdminView();
   }
 }
 
@@ -1255,6 +1265,77 @@ function toast(msg) {
   el.classList.add("show");
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(function () { el.classList.remove("show"); }, 2600);
+}
+
+/* ---------------- Envío en bloque (solo admin) ---------------- */
+var bulk = { list: [], idx: 0, type: "" };
+
+function adminCounts() {
+  var mora = 0, vig = 0;
+  state.rows.forEach(function (r) {
+    if (r.status === "mora") mora++;
+    else if (r.status === "vigente") vig++;
+  });
+  return { mora: mora, vig: vig };
+}
+
+function refreshAdminView() {
+  var adm = $("navAdmin");
+  if (adm) adm.hidden = !isAdmin();
+  var c = adminCounts();
+  $("admCountMora").textContent = String(c.mora);
+  $("admCountVig").textContent = String(c.vig);
+  if ($("viewAdmin") && !$("viewAdmin").hidden) {
+    if (bulk.list.length === 0) $("admQueue").hidden = true;
+  }
+}
+
+function startBulk(type) {
+  var list = [];
+  state.rows.forEach(function (r) {
+    if (r.status === (type === "mora" ? "mora" : "vigente")) list.push(r);
+  });
+  bulk = { list: list, idx: 0, type: type };
+  if (list.length === 0) { toast(type === "mora" ? "No hay residentes EN MORA" : "No hay residentes VIGENTES"); return; }
+  $("admQueue").hidden = false;
+  renderBulk();
+  vib(10);
+}
+
+function renderBulk() {
+  var n = bulk.list.length;
+  var i = bulk.idx;
+  if (n === 0) return;
+  var r = bulk.list[i];
+  $("admProgress").textContent = "Mensaje " + (i + 1) + " de " + n;
+  var tel = r.phones && r.phones.length ? formatPhoneDisplay(r.phones[0]) : "Sin número";
+  $("admRecip").textContent = (r.status === "mora" ? "Cobranza · " : "Pago · ") + (r.ownerName || "Vecino") +
+    (r.block ? " · " + formatBlockLabel(r.block) : "") + " · " + tel;
+  var txt = r.status === "mora" ? cobranzaText(r) : recordatorioText(r);
+  $("admMsg").value = txt;
+  $("admPrev").disabled = i === 0;
+  $("admNext").disabled = i >= n - 1;
+}
+
+function bulkNext() {
+  if (bulk.list.length && bulk.idx < bulk.list.length - 1) { bulk.idx++; renderBulk(); vib(6); }
+}
+
+function bulkPrev() {
+  if (bulk.idx > 0) { bulk.idx--; renderBulk(); vib(6); }
+}
+
+function bulkOpen() {
+  var r = bulk.list[bulk.idx];
+  if (!r) return;
+  state.selected = r;
+  openCobranza();
+}
+
+function closeBulk() {
+  bulk = { list: [], idx: 0, type: "" };
+  $("admQueue").hidden = true;
+  state.selected = null;
 }
 
 /* ---------------- Formulario manual ---------------- */
@@ -1385,6 +1466,15 @@ function init() {
   $("bitClose").addEventListener("click", function () { switchView("directorio"); });
   $("formClose").addEventListener("click", function () { switchView("directorio"); });
   $("newEntryBtn").addEventListener("click", function () { switchView("form"); });
+
+  // envío en bloque (solo administración)
+  $("admClose").addEventListener("click", function () { closeBulk(); switchView("directorio"); });
+  $("admBulkMora").addEventListener("click", function () { startBulk("mora"); });
+  $("admBulkVig").addEventListener("click", function () { startBulk("vigente"); });
+  $("admQueueClose").addEventListener("click", closeBulk);
+  $("admPrev").addEventListener("click", bulkPrev);
+  $("admNext").addEventListener("click", bulkNext);
+  $("admOpen").addEventListener("click", bulkOpen);
 
   // acceso de administración (tocar la versión o el logo)
   var verEl = $("appVer");

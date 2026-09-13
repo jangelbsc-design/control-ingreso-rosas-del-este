@@ -58,7 +58,7 @@ Todo se configura en **`js/config.js`**:
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado) | `0` |
 | `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
-| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `8` |
+| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `9` |
 | `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/QR pago expensas.jpeg` |
 
 ### 3.3 Columnas de la hoja
@@ -227,12 +227,16 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
    - Ejemplo: la primera fila puede ser el encabezado; los usuarios van debajo (`Admin | 6567`, `Ingreso | 7845`, …).
    - Si el usuario (o el rol) contiene la palabra *"admin"*, la app lo trata como **administrador**.
 2. **Inicio de sesión obligatorio:** en cualquier dispositivo **nuevo**, la app se abre directamente en una **pantalla de inicio** y **no se puede usar hasta iniciar sesión** (usuario + contraseña de la pestaña `Usuarios`). Esa sesión **queda guardada en el celular**: las siguientes veces que lo abras ya no pedirá nada. El primer login de un celular necesita **internet** (para leer la pestaña `Usuarios`); luego la app funciona offline con la sesión guardada.
-3. **Cambiar de sesión / cerrar sesión:** en la Bitácora, **toca la versión** (el "v8") o el **logo**. Si estás logueado ves tu usuario y "Cerrar sesión"; si no, verás el formulario. Al cerrar sesión la app vuelve a bloquearse con la pantalla de inicio. Junto a la versión se muestra quién está activo (ej. `v8 · Admin · Admin` o `v8 · Ingreso`).
+3. **Cambiar de sesión / cerrar sesión:** en la Bitácora, **toca la versión** (el "v9") o el **logo**. Si estás logueado ves tu usuario y "Cerrar sesión"; si no, verás el formulario. Al cerrar sesión la app vuelve a bloquearse con la pantalla de inicio. Junto a la versión se muestra quién está activo (ej. `v9 · Admin · Admin` o `v9 · Ingreso`).
 3. **El QR de pago:** tu imagen del QR está guardada en la carpeta de la app como **`imágenes/QR pago expensas.jpeg`** (puedes cambiarla en `js/config.js` con `QR_IMAGE`). Al abrir el recordatorio, la app muestra el QR y te permite **Guardar QR**.
 4. **Los dos mensajes** (se arman con saludo según la hora + **nombre del vecino + manzano y lote**):
    - **En mora ("Cobranza"):** invita a regularizar el pago, menciona el QR adjunto, los beneficios de estar al día y firma **Administración Rosas del Este Zona Sur**.
    - **Vigente ("Recordatorio de pago"):** *"Buenos días, estimado [Nombre] de Rosas del Este ([Manzano X - Lote Y]). Le enviamos este recordatorio para que pueda realizar el pago de sus expensas mediante el QR adjunto. Si usted ya realizó el pago, por favor ignore este mensaje. ¡Muchas gracias por su puntualidad y que tenga un excelente día!"* + firma.
 5. **Enviar por WhatsApp con el QR adjunto:** el botón **WhatsApp** usa el botón **"Compartir"** del teléfono (Web Share), así puedes elegir **WhatsApp** y la foto del QR **ya viaja adjunta** con el mensaje como descripción. Si tu navegador no permite adjuntar, la app abre el WhatsApp con el texto y te avisa para que adjuntes el QR guardado.
+6. **Enviar en bloque (a todos los en mora / a todos los vigentes):** con sesión de **Admin**, abajo aparece el botón **"Admin"**. Ahí ves dos opciones con sus contadores:
+   - **"Enviar a EN MORA (N)"** → arma la lista de todos los morosos con su mensaje de cobranza.
+   - **"Enviar a VIGENTES (N)"** → arma la lista de todos los vigentes con su recordatorio de pago.
+   Toca la opción y aparecerá la **cola de mensajes** (ej. "Mensaje 1 de 35"): tocas **"Abrir mensaje"** → **WhatsApp** (envías con el QR adjunto si el teléfono lo permite) → vuelves y tocas **"Siguiente"**. Todo es manual a propósito: es lo que WhatsApp considera normal y evita que bloqueen la cuenta por enviar muchos seguidos.
 
 ---
 
