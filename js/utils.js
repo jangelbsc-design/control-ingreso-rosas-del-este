@@ -61,21 +61,45 @@ function parseCSV(text) {
 }
 
 /* ---------- Teléfonos ---------- */
-/* Extrae todos los números (7+ dígitos) que haya en la casilla,
-   sin importar si están separados por " - ", espacios, "/", ","...
+/* Extrae todos los números (7+ dígitos) de la casilla CELULAR,
+   reconstruyendo números escritos con espacios o guiones internos
+   (ej. "7603 6960 - 7903 9893", "76-036-960", "59171234567").
    Si countryCode viene dado (ej. "591"), lo quita para guardar el
    número local (sin prefijo). */
 function extractPhones(value, countryCode) {
   if (value == null) return [];
   var raw = String(value);
   var cc = String(countryCode || "");
-  var out = [];
-  var re = /(\d{7,14})/g;
+  var re = /(\d+)/g;
+  var groups = [];
   var m;
   while ((m = re.exec(raw)) !== null) {
-    var d = m[1];
-    if (cc && d.indexOf(cc) === 0 && d.length > cc.length) d = d.slice(cc.length);
-    if (d.length >= 7 && out.indexOf(d) === -1) out.push(d);
+    groups.push({ d: m[1], start: m.index, end: m.index + m[1].length });
+  }
+
+  var out = [];
+  var i = 0;
+  while (i < groups.length) {
+    var s = "";
+    var j = i;
+    var formed = null;
+    while (j < groups.length) {
+      if (j > i) {
+        var gap = groups[j].start - groups[j - 1].end;
+        if (gap > 4) break; // demasiado separados: son números distintos
+      }
+      s += groups[j].d;
+      var local = s;
+      if (cc && local.length > cc.length && local.indexOf(cc) === 0) local = local.slice(cc.length);
+      if (local.length >= 7 && local.length <= 10) { formed = local; break; }
+      j++;
+    }
+    if (formed) {
+      if (out.indexOf(formed) === -1) out.push(formed);
+      i = j + 1; // salta los grupos ya usados
+    } else {
+      i++;
+    }
   }
   return out;
 }
