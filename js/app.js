@@ -299,9 +299,9 @@ function counts() {
 
 function renderSummary() {
   var c = counts();
-  $("tabAll").textContent = " Todos (" + c.total + ") ";
-  $("tabVig").textContent = " Vigentes (" + c.vig + ") ";
-  $("tabMora").textContent = " En mora (" + c.mora + ") ";
+  if ($("tabAll")) $("tabAll").textContent = " Todos (" + c.total + ") ";
+  if ($("tabVig")) $("tabVig").textContent = " Vigentes (" + c.vig + ") ";
+  if ($("tabMora")) $("tabMora").textContent = " En mora (" + c.mora + ") ";
 }
 
 /* ---------------- Filtros ---------------- */
@@ -331,7 +331,7 @@ function renderCards(rows) {
   var empty = $("empty");
   var count = $("countLine");
 
-  if (!count) return;
+  if (!wrap || !empty) return;
   if (state.query) {
     count.innerHTML = "<strong>" + rows.length + "</strong> resultado" + (rows.length === 1 ? "" : "s") +
       " para «" + escapeHTML(state.query) + "»";
