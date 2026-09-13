@@ -940,14 +940,6 @@ function renderBitacora(filterToday) {
       item.appendChild(note);
     }
 
-    var del = document.createElement("button");
-    del.type = "button";
-    del.className = "bit-del";
-    del.title = "Eliminar registro";
-    del.innerHTML = svgTrash();
-    del.addEventListener("click", function () { removeBitacora(e.id); });
-    item.appendChild(del);
-
     frag.appendChild(item);
   });
   wrap.appendChild(frag);
@@ -1124,9 +1116,6 @@ function init() {
   // bitácora
   $("bitToday").addEventListener("change", function () { renderBitacora(this.checked); });
   $("bitExport").addEventListener("click", exportBitacoraCSV);
-  $("bitClear").addEventListener("click", function () {
-    if (confirm("¿Vaciar los ingresos de hoy?")) clearTodayBitacora();
-  });
 
   // cierre de overlays
   $("dtClose").addEventListener("click", closeDetail);
