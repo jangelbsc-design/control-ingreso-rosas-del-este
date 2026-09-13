@@ -97,6 +97,8 @@ button { font-family: inherit; cursor: pointer; }
   padding: 12px 0; min-width: 0;
 }
 .search-box input::placeholder { color: #9aa0a6; font-weight: 500; }
+.search-box input[type="search"]::-webkit-search-cancel-button,
+.search-box input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
 .search-clear {
   flex: 0 0 auto; width: 36px; height: 36px; margin-right: 4px;
   display: grid; place-items: center;
