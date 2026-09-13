@@ -173,6 +173,35 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 | "Datos locales · …" en amarillo | Estás viendo datos guardados sin conexión; conecta e internet y recarga. |
 | Cambié la hoja y no se refleja | Recarga la página (F5). Si se usó caché, los datos se actualizan al recargar con internet. |
 | Celular nuevo sin datos | Ábrela una vez con internet para que guarde la copia. |
+| En la bitácora no se ve la **Nota** ni el **propietario** | Ya está corregido: la bitácora ahora muestra el propietario, el visitante, la placa, la nota y el origen. Si aún ves datos viejos, cierra y abre la app una vez. |
+| En Bitácora dice **"Local"** | Falta activar la sincronización: sigue la **sección 10**. |
+| En Bitácora dice **"Sin conexión"** | La app no pudo hablar con el web app (revisa red o BITACORA_URL). Se reintenta sola cada minuto. |
+| Registro no aparece en otros celulares | Verifica que `BITACORA_URL` esté en `config.js` (sección 10) y que en la bitácora diga **"En línea"**. |
+
+---
+
+## 10. Sincronizar la bitácora entre varios celulares (en vivo)
+
+Para que los registros de un guardia **se vean al instante en cualquier otro celular** (todos comparten la misma bitácora), la app usa un pequeño *web app* de **Google Apps Script** que guarda cada entrada en tu hoja de cálculo. Se configura **una sola vez** (~5 minutos):
+
+1. **Abre tu hoja de cálculo** de los vecinos (donde está la pestaña `PROPIETARIOS`).
+2. Menú **Extensiones → Apps Script** (en hoja nueva en pantalla grande, a veces dice "Herramientas → Editor de secuencias"). Se abre el editor de Google.
+3. **Borra** todo lo que haya en el editor y **pega el contenido del archivo `server/Bitacora.gs`** que está en la carpeta de la app.
+4. **Guarda** (botón disquete o Ctrl+G). Ponle el nombre que quieras, ej. `Bitacora`.
+5. **Implementar → Nueva implementación → Aplicación web:**
+   - *Ejecutar como*: debe decir **Yo** (tu cuenta).
+   - *Quién tiene acceso*: **Cualquier persona**.
+   - Clic en **Implementar** y **autoriza** (elige tu cuenta de Google y, si te advierte que la app no está verificada, toca "Avanzado → Ir a … (no seguro) → Permitir").
+6. Copia la **URL de la aplicación web** (la que termina en `/exec`; es la que NO pide "iniciar sesión").
+7. Pega esa URL en **`js/config.js`** dentro de las comillas de `BITACORA_URL: "…"`, guarda y sube los cambios (`git push`). Ejemplo:
+   ```js
+   BITACORA_URL: "https://script.google.com/macros/s/AKfyOXJ_xxx/exec"
+   ```
+8. Vuelve a abrir la app en cada celular (cierra/abre una vez). En la **Bitácora** debe aparecer el indicador **"En línea"**.
+
+La app crea automáticamente una pestaña **`BITACORA`** en tu hoja con las columnas: `ID · FECHA · HORA · MANZANO · PROPIETARIO · VISITANTE · PLACA · NOTA · ORIGEN`. Ahí podrás ver desde tu PC todos los ingresos en vivo, y también quedan en la hoja como respaldo.
+
+> **Cómo funciona por dentro:** cada celular guarda sus registros localmente (para funcionar sin internet) y los **envía al web app**, que los escribe en la hoja. La app **pide los registros cada minuto** (y al abrirla) y los mezcla, así todos ven lo mismo. Si un celular está desconectado, guarda la entrada en espera y la envía en cuanto vuelve la red.
 
 ---
 
@@ -186,4 +215,4 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 
 ---
 
-*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions y **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*

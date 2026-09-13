@@ -567,7 +567,7 @@ function openDetail(r) {
     }
   };
   $("dtRegistrar").onclick = function () {
-    addBitacora({ block: r.block, name: r.ownerName, plate: r.plates.join(", "), via: "directorio" });
+    addBitacora({ owner: r.ownerName, name: "", block: r.block, plate: r.plates.join(", "), via: "directorio" });
   };
 
   ov.hidden = false;
@@ -620,7 +620,18 @@ function closePhoneSheet() {
 function getBitacora() {
   try {
     var raw = localStorage.getItem(BITACORA_KEY);
-    return raw ? JSON.parse(raw) : [];
+    var list = raw ? JSON.parse(raw) : [];
+    var dirty = false;
+    list.forEach(function (e) {
+      if (!e.id) {
+        e.id = (Number(e.ts) || Date.now()).toString(36) + "-legacy";
+        dirty = true;
+      }
+      if (e.owner === undefined) { e.owner = ""; dirty = true; }
+      if (e.note === undefined) { e.note = ""; dirty = true; }
+    });
+    if (dirty) setBitacora(list);
+    return list;
   } catch (e) { return []; }
 }
 
@@ -628,35 +639,204 @@ function setBitacora(list) {
   try { localStorage.setItem(BITACORA_KEY, JSON.stringify(list)); } catch (e) { /* ignorar */ }
 }
 
+/* ---------------- Bitácora (local + sincronizada) ----------------
+   La bitácora se guarda en el dispositivo (para funcionar offline)
+   y además se sincroniza con el web app de Google Apps Script
+   (ver server/Bitacora.gs y BITACORA_URL en config.js). Si no hay
+   URL configurada, la app funciona igual pero solo en ese celular. */
+var BITACORA_URL_CACHED = undefined;
+
+function bitacoraURL() {
+  if (BITACORA_URL_CACHED === undefined) {
+    BITACORA_URL_CACHED = String((APP_CONFIG.BITACORA_URL || "")).replace(/\/+$/, "");
+  }
+  return BITACORA_URL_CACHED;
+}
+
+var PENDING_KEY = "rde_pending_v1";
+
+function getPending() {
+  try {
+    var raw = localStorage.getItem(PENDING_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+function setPending(q) {
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify(q)); } catch (e) { /* ignorar */ }
+}
+
 function addBitacora(data) {
   var st = nowStamp();
-  var list = getBitacora();
-  list.unshift({
+  var entry = {
+    id: st.ts.toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36),
     ts: st.ts,
     time: st.time,
     dateLabel: st.dateLabel,
     block: data.block || "",
+    owner: data.owner || "",
     name: data.name || "",
     plate: data.plate || "",
     note: data.note || "",
     via: data.via || "manual"
-  });
+  };
+  var list = getBitacora();
+  list.unshift(entry);
   setBitacora(list);
   renderBitacora();
   toast("Ingreso registrado " + st.time);
+  var q = getPending();
+  q.push(entry);
+  setPending(q);
+  flushPending();
 }
 
-function removeBitacora(ts) {
-  setBitacora(getBitacora().filter(function (e) { return e.ts !== ts; }));
+function removeBitacora(id) {
+  if (!id) return;
+  setBitacora(getBitacora().filter(function (e) { return e.id !== id; }));
+  setPending(getPending().filter(function (e) { return e.id !== id; }));
   renderBitacora();
+  var url = bitacoraURL();
+  if (url) {
+    fetch(url, { method: "POST", body: JSON.stringify({ action: "delete", id: id }), cache: "no-store" })
+      .catch(function () { /* sin red, se reintenta no es crítico */ });
+  }
 }
 
 function clearTodayBitacora() {
   var today = sameDateKey(Date.now());
-  var list = getBitacora().filter(function (e) { return e.dateLabel !== today; });
-  setBitacora(list);
+  var removed = [];
+  var out = [];
+  getBitacora().forEach(function (e) {
+    if (e.dateLabel === today) removed.push(e.id); else out.push(e);
+  });
+  setBitacora(out);
+  setPending(getPending().filter(function (e) { return e.dateLabel !== today; }));
   renderBitacora();
-  toast("Bitácora de hoy vaciada");
+  toast(removed.length ? "Bitácora de hoy vaciada" : "No hay registros para hoy");
+
+  var url = bitacoraURL();
+  if (url && removed.length) {
+    var i = 0;
+    (function next() {
+      if (i >= removed.length) return;
+      var id = removed[i++];
+      fetch(url, { method: "POST", body: JSON.stringify({ action: "delete", id: id }), cache: "no-store" })
+        .catch(function () { /* sin red */ })
+        .then(next);
+    })();
+  }
+}
+
+/* ---------------- Sincronización entre dispositivos ---------------- */
+var syncing = false;
+
+function normalizeRemote(x) {
+  var n = Number(x.ts);
+  return {
+    id: String(x.id || ""),
+    ts: isNaN(n) ? Date.now() : n,
+    time: String(x.time || ""),
+    dateLabel: String(x.dateLabel || ""),
+    block: String(x.block || ""),
+    owner: String(x.owner || ""),
+    name: String(x.name || ""),
+    plate: String(x.plate || ""),
+    note: String(x.note || ""),
+    via: String(x.via || "manual")
+  };
+}
+
+var flushing = false;
+function flushPending() {
+  var url = bitacoraURL();
+  if (!url || flushing) return;
+  var q = getPending();
+  if (!q.length) return;
+  flushing = true;
+  var sent = [];
+  var failed = [];
+  var i = 0;
+  (function next() {
+    if (i >= q.length) {
+      var sentMap = {};
+      sent.forEach(function (s) { sentMap[s] = 1; });
+      setPending(getPending().filter(function (e) { return !sentMap[e.id]; }));
+      flushing = false;
+      updateSyncStatus(failed.length ? false : true);
+      return;
+    }
+    var entry = q[i];
+    fetch(url, {
+      method: "POST",
+      body: JSON.stringify({ action: "add", entry: entry }),
+      cache: "no-store"
+    }).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (j) {
+      if (!j || !j.ok) throw new Error("no ok");
+      sent.push(entry.id);
+      i++;
+      next();
+    }).catch(function () {
+      failed.push(entry.id);
+      i++;
+      next();
+    });
+  })();
+}
+
+function fetchRemote(onDone) {
+  var url = bitacoraURL();
+  if (!url) { updateSyncStatus(null); if (onDone) onDone(); return; }
+  if (syncing) { if (onDone) onDone(); return; }
+  syncing = true;
+  fetch(url + (url.indexOf("?") === -1 ? "?" : "&") + "action=list&rnd=" + Date.now(), { cache: "no-store" })
+    .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(function (list) {
+      if (!Array.isArray(list)) throw new Error("formato");
+      var byId = {};
+      getBitacora().forEach(function (x) { if (x.id) byId[x.id] = x; });
+      list.forEach(function (x) {
+        var e = normalizeRemote(x);
+        if (e.id && !byId[e.id]) byId[e.id] = e;
+      });
+      var merged = Object.keys(byId).map(function (k) { return byId[k]; });
+      merged.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+      setBitacora(merged);
+      renderBitacora($("bitToday") ? $("bitToday").checked : undefined);
+      updateSyncStatus(true);
+    })
+    .catch(function () { updateSyncStatus(false); })
+    .then(function () {
+      syncing = false;
+      if (onDone) onDone();
+    });
+}
+
+function syncBitacora() {
+  flushPending();
+  if (bitacoraURL()) fetchRemote();
+  else updateSyncStatus(null);
+}
+
+function updateSyncStatus(mode) {
+  var el = $("bitSync");
+  if (!el) return;
+  if (mode === null) {
+    el.className = "sync-pill sync-none";
+    el.textContent = "Local";
+    el.title = "Sin URL de sincronización (js/config.js > BITACORA_URL)";
+  } else if (mode) {
+    el.className = "sync-pill sync-ok";
+    el.textContent = "En línea";
+    el.title = "Sincronizado con todos los dispositivos";
+  } else {
+    el.className = "sync-pill sync-off";
+    el.textContent = "Sin conexión";
+    el.title = "Se reintentará automáticamente";
+  }
 }
 
 function renderBitacora(filterToday) {
@@ -672,7 +852,7 @@ function renderBitacora(filterToday) {
   if (!list.length) {
     var empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.innerHTML = "Aún no hay registros.<br>Usa <strong>Ingreso</strong> o la ficha de un vecino.";
+    empty.innerHTML = "Aún no hay registros.<br>Usa <strong>Registro</strong> o la ficha de un vecino.";
     wrap.appendChild(empty);
     return;
   }
@@ -690,7 +870,13 @@ function renderBitacora(filterToday) {
     var who = document.createElement("div");
     who.className = "bit-who";
     who.innerHTML = (e.block ? "<span class='chip chip-block chip-xs'>" + escapeHTML(e.block) + "</span> " : "") +
-      "<strong>" + escapeHTML(e.name || "Ingreso externo") + "</strong>";
+      "<strong>" + escapeHTML(e.owner || e.name || "Ingreso externo") + "</strong>";
+    if (e.owner && e.name) {
+      var vis = document.createElement("span");
+      vis.className = "bit-via";
+      vis.innerHTML = "Visitante: <strong>" + escapeHTML(e.name) + "</strong>";
+      who.appendChild(vis);
+    }
     item.appendChild(who);
 
     var foot = document.createElement("div");
@@ -709,12 +895,19 @@ function renderBitacora(filterToday) {
     }
     item.appendChild(foot);
 
+    if (e.note) {
+      var note = document.createElement("div");
+      note.className = "bit-note";
+      note.innerHTML = "Nota: <span>" + escapeHTML(e.note) + "</span>";
+      item.appendChild(note);
+    }
+
     var del = document.createElement("button");
     del.type = "button";
     del.className = "bit-del";
     del.title = "Eliminar registro";
     del.innerHTML = svgTrash();
-    del.addEventListener("click", function () { removeBitacora(e.ts); });
+    del.addEventListener("click", function () { removeBitacora(e.id); });
     item.appendChild(del);
 
     frag.appendChild(item);
@@ -726,9 +919,11 @@ function exportBitacoraCSV() {
   var list = getBitacora();
   if (!list.length) { toast("No hay registros para exportar"); return; }
   var esc = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
-  var lines = [["Fecha", "Hora", "Manzano", "Nombre", "Placa", "Origen"].map(esc).join(",")];
+  var csvProp = function (e) { return e.owner || (e.via === "directorio" ? e.name : ""); };
+  var csvVis = function (e) { return e.owner ? e.name : (e.via === "directorio" ? "" : e.name); };
+  var lines = [["Fecha", "Hora", "Manzano", "Propietario", "Visitante", "Placa", "Nota", "Origen"].map(esc).join(",")];
   list.forEach(function (e) {
-    lines.push([e.dateLabel, e.time, e.block, e.name, e.plate, e.via].map(esc).join(","));
+    lines.push([e.dateLabel, e.time, e.block, csvProp(e), csvVis(e), e.plate, e.note, e.via].map(esc).join(","));
   });
   var blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
   var a = document.createElement("a");
@@ -755,6 +950,7 @@ function switchView(view) {
   $("badgeBitacora").hidden = true;
 
   if (view === "bitacora") {
+    syncBitacora();
     renderBitacora($("bitToday").checked);
   } else if (view === "directorio") {
     var inp = $("searchInput");
@@ -821,7 +1017,8 @@ function submitManualEntry(ev) {
   }
   addBitacora({
     block: prop.block,
-    name: visitor || prop.name,
+    owner: prop.name || "",
+    name: visitor,
     plate: plate,
     note: note,
     via: "manual"
@@ -933,6 +1130,13 @@ function init() {
     setInterval(function () { loadData(); }, APP_CONFIG.AUTO_REFRESH_MIN * 60000);
   }
 
+  // sincronización de la bitácora: cada minuto y al volver a la app
+  syncBitacora();
+  setInterval(function () { syncBitacora(); }, 60000);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) syncBitacora();
+  });
+
   // volver arriba
   var toTopBtn = $("toTopBtn");
   function syncToTopBtn() {
@@ -945,7 +1149,7 @@ function init() {
   syncToTopBtn();
 
   // registro del service worker (siempre mantiene la versión actualizada)
-  if ("serviceWorker" in navigator) {
+  if (navigator.serviceWorker) {
     var hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register("sw.js").then(function (reg) {
       reg.addEventListener("updatefound", function () {

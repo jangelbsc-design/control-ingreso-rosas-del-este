@@ -123,6 +123,15 @@ button { font-family: inherit; cursor: pointer; }
 }
 .count-line strong { color: var(--negro); font-size: 15px; }
 
+/* Pilón de estado de sincronización de la bitácora */
+.sync-pill {
+  font-size: 11px; font-weight: 700; letter-spacing: .3px;
+  border-radius: 99px; padding: 3px 9px; white-space: nowrap;
+}
+.sync-ok { color: var(--verde); border: 1px solid var(--verde); background: rgba(14, 122, 61, .07); }
+.sync-off { color: var(--rojo); border: 1px solid var(--rojo); background: rgba(196, 37, 38, .07); }
+.sync-none { color: #b0b4b9; border: 1px solid #d3d6da; background: rgba(176, 180, 185, .08); }
+
 /* ---------------- Tarjetas ---------------- */
 .results { display: flex; flex-direction: column; gap: 10px; }
 .card {
@@ -238,7 +247,11 @@ button { font-family: inherit; cursor: pointer; }
 .bit-time { font-size: 11.5px; font-weight: 700; color: var(--gris-texto); letter-spacing: .3px; }
 .bit-who { margin-top: 6px; font-size: 14.5px; line-height: 1.45; }
 .bit-who .chip-block { margin-right: 4px; }
+.bit-who .bit-via { margin-left: 4px; }
+.bit-who .bit-via strong { color: var(--negro); }
 .bit-foot { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.bit-note { margin-top: 7px; font-size: 12.5px; color: var(--gris-texto); line-height: 1.4; }
+.bit-note span { color: var(--negro); font-weight: 600; }
 .bit-via { font-size: 11px; color: #b0b4b9; font-weight: 600; }
 .bit-del {
   position: absolute; top: 10px; right: 10px;

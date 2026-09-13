@@ -35,5 +35,18 @@ var APP_CONFIG = {
   AUTO_REFRESH_MIN: 0,
 
   /* Guardar los datos en el navegador para funcionar offline */
-  OFFLINE_CACHE: true
+  OFFLINE_CACHE: true,
+
+  /* ============================================================
+     SINCRONIZACIÓN DE LA BITÁCORA ENTRE DISPOSITIVOS
+     ============================================================
+     La URL del web app de Google Apps Script que guarda/lee la
+     bitácora en tu hoja de cálculo (ver server/Bitacora.gs y la
+     sección 10 de RECUERDAME.md).
+
+     Dejar "" para funcionar solo en este dispositivo (sin
+     sincronización). Ejemplo completo:
+     BITACORA_URL: "https://script.google.com/macros/s/XXXXXXXX/exec"
+     ============================================================ */
+  BITACORA_URL: ""
 };
