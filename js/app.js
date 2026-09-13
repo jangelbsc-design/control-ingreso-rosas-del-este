@@ -146,7 +146,8 @@ function splitOwners(raw) {
 /* ---------------- Carga de datos ---------------- */
 function gvizURL(sheetName, cbName) {
   var url = "https://docs.google.com/spreadsheets/d/" + APP_CONFIG.SPREADSHEET_ID +
-    "/gviz/tq?tqx=out:json;responseHandler:" + cbName;
+    "/gviz/tq?tqx=out:json;responseHandler:" + cbName +
+    "&rnd=" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
   if (sheetName) url += "&sheet=" + encodeURIComponent(sheetName);
   return url;
 }
@@ -236,8 +237,17 @@ function loadCache() {
 }
 
 function loadData() {
-  var attempt = function (err) {
-    if (!err) return;
+  var tries = 0;
+
+  function attempt(err) {
+    tries++;
+    if (tries < 2) {
+      loadViaJSONP(APP_CONFIG.SHEET_NAME, function (err2, result) {
+        if (!err2) { finalize(result); return; }
+        attempt(err2);
+      });
+      return;
+    }
     loadViaExportCSV(function (err2, result) {
       if (err2) {
         var cache = loadCache();
@@ -251,7 +261,7 @@ function loadData() {
       }
       finalize(result);
     });
-  };
+  }
 
   loadViaJSONP(APP_CONFIG.SHEET_NAME, function (err, result) {
     if (!err) {
