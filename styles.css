@@ -132,7 +132,7 @@ button { font-family: inherit; cursor: pointer; }
 .sync-off { color: var(--rojo); border: 1px solid var(--rojo); background: rgba(196, 37, 38, .07); }
 .sync-none { color: #b0b4b9; border: 1px solid #d3d6da; background: rgba(176, 180, 185, .08); }
 
-.ver-tag { font-size: 10px; color: #b0b4b9; margin-left: auto; }
+.ver-tag { font-size: 10px; color: #b0b4b9; margin-left: auto; cursor: pointer; }
 
 /* ---------------- Tarjetas ---------------- */
 .results { display: flex; flex-direction: column; gap: 10px; }
@@ -216,6 +216,10 @@ button { font-family: inherit; cursor: pointer; }
 .btn-green { background: var(--verde); color: var(--blanco); }
 .btn-outline-dark { background: transparent; border: 1.5px solid var(--negro); color: var(--negro); }
 .btn-outline-green { background: transparent; border: 1.5px solid var(--verde); color: var(--verde-osc); }
+.btn-cobranza {
+  width: 100%; margin-top: 10px;
+  background: transparent; border: 1.5px solid var(--rojo); color: var(--rojo-osc);
+}
 .btn-outline-red { background: transparent; border: 1.5px solid var(--rojo); color: var(--rojo-osc); }
 .btn-outline-light { background: transparent; border: 1.5px solid rgba(255,255,255,.4); color: var(--blanco); }
 .w-full { width: 100%; }
@@ -405,6 +409,18 @@ body.locked { overflow: hidden; }
   letter-spacing: 1px;
 }
 .sheet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sheet-number-sm { font-size: 15px; margin: 4px 0 10px; font-family: inherit; letter-spacing: .3px; color: var(--gris-texto); }
+.cobranza-msg {
+  width: 100%; box-sizing: border-box; resize: vertical;
+  border: 1.5px solid var(--gris-linea); border-radius: 12px;
+  padding: 12px; font-size: 14px; line-height: 1.5;
+  font-family: inherit; color: var(--negro); background: var(--blanco);
+}
+.cobranza-msg:focus { border-color: var(--rojo); box-shadow: 0 0 0 3px rgba(196, 37, 38, .12); outline: none; }
+.login-error { color: var(--rojo); font-size: 13px; font-weight: 700; text-align: center; margin: 4px 0; }
+.login-session { text-align: center; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--gris-linea); }
+.session-user { font-size: 14px; font-weight: 800; color: var(--verde-osc); margin-bottom: 10px; }
+.footer-ver { display: flex; align-items: center; gap: 6px; }
 .btn-ghost {
   background: transparent; color: var(--gris-texto);
   border: 0; padding: 12px; font-size: 14px; font-weight: 700; margin-top: 8px;

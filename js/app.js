@@ -17,6 +17,89 @@ var state = {
 
 var CACHE_KEY = "rde_cache_v1";
 var BITACORA_KEY = "rde_bitacora_v1";
+var SESSION_KEY = "rde_session_v1";
+
+/* ---------------- Sesión de administración ---------------- */
+function getSession() {
+  try {
+    var raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    var s = JSON.parse(raw);
+    if (s && s.user && s.role) return s;
+  } catch (e) { /* ignorar */ }
+  return null;
+}
+
+function setSession(user, role) {
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ user: user, role: role, ts: Date.now() }));
+  } catch (e) { /* ignorar */ }
+}
+
+function clearSession() {
+  try { localStorage.removeItem(SESSION_KEY); } catch (e) { /* ignorar */ }
+}
+
+function isAdmin() {
+  var s = getSession();
+  return !!(s && s.role === "admin");
+}
+
+function openLogin() {
+  var s = getSession();
+  $("loginError").hidden = true;
+  $("loginForm").hidden = !!s;
+  $("loginSession").hidden = !s;
+  if (s) {
+    $("sessionUser").textContent = "Sesión iniciada: " + s.user;
+  } else {
+    $("loginUser").value = "";
+    $("loginPass").value = "";
+    setTimeout(function () { $("loginUser").focus(); }, 80);
+  }
+  $("loginOverlay").hidden = false;
+  document.body.classList.add("locked");
+}
+
+function closeLogin() {
+  $("loginOverlay").hidden = true;
+  document.body.classList.remove("locked");
+}
+
+function roleOfUser(user, rol) {
+  var u = normalizeText(user);
+  var r = normalizeText(rol);
+  if (/admin/.test(u) || /admin/.test(r)) return "admin";
+  return r || "usuario";
+}
+
+function doLogin(user, pass, cb) {
+  loadViaJSONP(APP_CONFIG.SHEET_USERS || "Usuarios", function (err, result) {
+    if (err) { cb(new Error("No se pudo leer los usuarios. Revisa la conexión.")); return; }
+    var idxU = 0, idxP = 1, idxR = -1;
+    result.cols.forEach(function (c, i) {
+      var n = normalizeText(c);
+      if (/usu|nombre/.test(n) && !/cont/.test(n)) idxU = i;
+      if (/cont|clave|pass/.test(n)) idxP = i;
+      if (/rol|permiso|tipo/.test(n)) idxR = i;
+    });
+    var uNorm = normalizeText(user);
+    var pNorm = normalizeText(pass);
+    var candidates = [result.cols.slice()].concat(result.rows.slice());
+    var match = null;
+    candidates.forEach(function (row) {
+      if (!row || row.length < 2) return;
+      if (normalizeText(row[idxU]) === uNorm && normalizeText(row[idxP]) === pNorm) {
+        match = {
+          user: String(row[idxU] == null ? "" : row[idxU]).trim() || user,
+          role: roleOfUser(row[idxU], row[idxR] != null && row.length > idxR ? String(row[idxR]) : "")
+        };
+      }
+    });
+    if (!match) { cb(new Error("Usuario o contraseña incorrectos.")); return; }
+    cb(null, match);
+  });
+}
 
 /* ---------------- Elementos ---------------- */
 var $ = function (id) { return document.getElementById(id); };
@@ -570,6 +653,8 @@ function openDetail(r) {
     addBitacora({ owner: r.ownerName, name: "", block: r.block, plate: r.plates.join(", "), via: "directorio" });
   };
 
+  $("dtCobrar").hidden = !(isAdmin() && r.status === "mora");
+
   ov.hidden = false;
   document.body.classList.add("locked");
 }
@@ -595,6 +680,61 @@ function call(number) {
 
 function whatsapp(number, r) {
   window.open("https://wa.me/" + number, "_blank");
+}
+
+/* ---------------- Mensaje de cobranza (solo administración) ---------------- */
+function cobranzaText(r) {
+  var d = new Date();
+  var h = d.getHours();
+  var saludo = h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
+  var nombre = String(r.ownerName || "").trim();
+  var block = formatBlockLabel(r.block);
+  var line1 = saludo + ", " + (nombre ? nombre + ", " : "") + "vecino de Rosas del Este" +
+    (block ? " (" + block + ")" : "") + ".";
+
+  return line1 + "\n\n" +
+    "Le recordamos desde la Administración que sus expensas se encuentran pendientes. " +
+    "Le invitamos a regularizar su pago a la brevedad para mantenerse al día con sus obligaciones.\n\n" +
+    "Le recordamos que estar al día con las expensas no solo evita recargos, " +
+    "sino que le permite gozar de todos los beneficios de la urbanización y, además, " +
+    "aporta a la plusvalía y al mantenimiento del valor de su vivienda dentro de Rosas del Este.\n\n" +
+    "Si ya regularizó su situación, por favor ignore este mensaje.\n\n" +
+    "¡Gracias por su atención!\n\n" +
+    "Administración Rosas del Este Zona Sur";
+}
+
+function openCobranza() {
+  var r = state.selected;
+  if (!r) return;
+  var nombre = r.ownerName || "Vecino";
+  var tel = r.phones && r.phones.length ? formatPhoneDisplay(r.phones[0]) : "Sin número registrado";
+  $("cobranzaRecip").textContent = nombre + (r.block ? " · " + formatBlockLabel(r.block) : "") + " · " + tel;
+  $("cobranzaMsg").value = cobranzaText(r);
+  $("cobranzaOverlay").hidden = false;
+  document.body.classList.add("locked");
+  vib(10);
+}
+
+function closeCobranza() {
+  $("cobranzaOverlay").hidden = true;
+  if (state.selected == null) document.body.classList.remove("locked");
+}
+
+function copyCobranza() {
+  var msg = $("cobranzaMsg").value;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(function () { toast("Mensaje copiado"); });
+  } else {
+    toast("No se pudo copiar en este navegador");
+  }
+}
+
+function sendCobranzaWA() {
+  var r = state.selected;
+  var dial = r && r.phonesDial && r.phonesDial[0] ? r.phonesDial[0] : (r && r.phones && r.phones[0] ? toDialNumber(r.phones[0], APP_CONFIG.COUNTRY_CODE) : "");
+  if (!dial) { toast("Sin número de WhatsApp para este vecino"); return; }
+  var msg = $("cobranzaMsg").value;
+  window.open("https://wa.me/" + dial + "?text=" + encodeURIComponent(msg), "_blank");
 }
 
 /* ---------------- Hoja de acciones del teléfono ---------------- */
@@ -1122,6 +1262,38 @@ function init() {
   $("bitClose").addEventListener("click", function () { switchView("directorio"); });
   $("formClose").addEventListener("click", function () { switchView("directorio"); });
   $("newEntryBtn").addEventListener("click", function () { switchView("form"); });
+
+  // acceso de administración (tocar la versión o el logo)
+  var verEl = $("appVer");
+  if (verEl) verEl.addEventListener("click", openLogin);
+  $("logoImg").addEventListener("click", openLogin);
+  $("loginCancel").addEventListener("click", closeLogin);
+  $("loginForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var user = $("loginUser").value.trim();
+    var pass = $("loginPass").value;
+    if (!user || !pass) { $("loginError").textContent = "Ingresa usuario y contraseña."; $("loginError").hidden = false; return; }
+    $("loginError").hidden = true;
+    doLogin(user, pass, function (err, match) {
+      if (err) { $("loginError").textContent = err.message; $("loginError").hidden = false; return; }
+      setSession(match.user, match.role);
+      closeLogin();
+      toast(match.role === "admin" ? "Sesión de administrador iniciada" : "Sesión iniciada");
+      if (state.selected) openDetail(state.selected);
+    });
+  });
+  $("sessionLogout").addEventListener("click", function () {
+    clearSession();
+    toast("Sesión cerrada");
+    openLogin();
+    if (state.selected) openDetail(state.selected);
+  });
+
+  // mensaje de cobranza
+  $("dtCobrar").addEventListener("click", openCobranza);
+  $("cobranzaCancel").addEventListener("click", closeCobranza);
+  $("cobranzaCopy").addEventListener("click", copyCobranza);
+  $("cobranzaWa").addEventListener("click", sendCobranzaWA);
 
   // hoja de acciones del teléfono
   $("psCall").addEventListener("click", function () {

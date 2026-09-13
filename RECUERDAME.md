@@ -205,14 +205,30 @@ La app usa **tu pestaña `bitacora`** (en minúsculas; si no existe, la crea sol
 
 ---
 
+## 11. Acceso de administración y mensaje de cobranza (por WhatsApp)
+
+Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el **Admin** ve el botón de cobranza en la ficha de cada vecino **en mora**.
+
+1. **El login usa tu pestaña `Usuarios`** (puedes cambiarla en `js/config.js` con `SHEET_USERS`). La hoja debe tener **2 columnas**:
+   - `USUARIO` | `CONTRASEÑA` (y, opcionalmente, una 3.ª columna `ROL`).
+   - Ejemplo: la primera fila puede ser el encabezado; los usuarios van debajo (`Admin | 6567`, `Ingreso | 7845`, …).
+   - Si el usuario (o el rol) contiene la palabra *"admin"*, la app lo trata como **administrador**.
+2. **Para iniciar sesión:** en la app, **toca la versión** (el "v6" de la Bitácora) o el **logo**. Se abre el formulario: usuario + contraseña. La sesión **queda guardada en ese celular** mientras no la cierres (botón "Cerrar sesión" en el mismo lugar).
+3. **Botón de cobranza:** estando en mora + sesión de admin, la ficha del vecino muestra **"Enviar recordatorio de cobranza"**. Al tocarlo:
+   - Se arma un **mensaje personalizado** (saludo según la hora + nombre + manzano) basado en este texto: expensas pendientes, beneficios, plusvalía, aviso "si ya pagó ignórelo" y la firma **Administración Rosas del Este Zona Sur**.
+   - Lo puedes **editar**, **copiar** o enviar directo por **WhatsApp** al número del vecino.
+
+> El mensaje queda en el portapapeles si tocas "Copiar", y se abre WhatsApp con el texto ya escrito si tocas "WhatsApp".
+
+---
+
 ## 9. Mejoras posibles (para después)
 
-- 🔒 Contraseña / clave de acceso para guardias.
+- 🔒 (hecho: hay usuarios con contraseña de la pestaña `Usuarios`; faltaría bloquear toda la app para guardias con rol de solo lectura).
 - 📷 Escáner de placas con la cámara (OCR).
-- 💬 Envío de boletas de cobranza por WhatsApp desde la ficha.
 - 📊 Reportes mensuales de ingresos/salidas.
 - 🌐 Integración con N8N (si la administración usa flujos).
 
 ---
 
-*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions y **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, login de administración con la pestaña `Usuarios` y **mensaje de cobranza por WhatsApp** — sección 11). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*

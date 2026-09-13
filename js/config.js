@@ -23,6 +23,12 @@ var APP_CONFIG = {
   SPREADSHEET_ID: "1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO",
   SHEET_NAME: "PROPIETARIOS",
 
+  /* Pestaña con los usuarios y contraseñas para iniciar sesión
+     (columnas: USUARIO · CONTRASEÑA · [ROL opcional]).
+     El rol "admin" (o un usuario que contenga "admin") ve las
+     funciones de administración, como el mensaje de cobranza. */
+  SHEET_USERS: "Usuarios",
+
   APP_NAME: "Urbanización Rosas del Este",
   APP_SUBTITLE: "Control de Ingreso",
 
@@ -52,5 +58,5 @@ var APP_CONFIG = {
 
   /* Versión visible de la app (ajústala cada vez que cambies algo).
      Sirve para comprobar de qué versión está cada teléfono. */
-  APP_VERSION: "5"
+  APP_VERSION: "6"
 };
