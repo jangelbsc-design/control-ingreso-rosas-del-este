@@ -191,7 +191,7 @@
             <path d="m9 17-5-5 5-5"/>
             <path d="M4 12h16"/>
           </svg>
-          Enviar recordatorio de cobranza
+          <span id="dtCobrarLabel">Enviar recordatorio de cobranza</span>
         </button>
       </div>
     </div>
@@ -226,10 +226,17 @@
 
   <!-- ============ MENSAJE DE COBRANZA ============ -->
   <div id="cobranzaOverlay" class="overlay sheet-overlay" hidden>
-    <div class="sheet" role="dialog" aria-label="Mensaje de cobranza">
+    <div class="sheet" role="dialog" aria-label="Recordatorio">
       <div class="sheet-handle"></div>
-      <div class="sheet-title">Recordatorio de cobranza</div>
+      <div class="sheet-title" id="cobranzaTitle">Recordatorio de cobranza</div>
       <div class="sheet-number sheet-number-sm" id="cobranzaRecip">—</div>
+      <div id="cobranzaQrWrap" class="qr-wrap" hidden>
+        <img id="cobranzaQr" class="qr-img" alt="QR de pago">
+        <div class="qr-hint">Adjunta esta imagen al enviar por WhatsApp.</div>
+        <div class="qr-actions">
+          <button type="button" id="cobranzaQrSave" class="btn btn-outline-dark btn-sm">Guardar QR</button>
+        </div>
+      </div>
       <textarea id="cobranzaMsg" class="cobranza-msg" rows="13" spellcheck="false"></textarea>
       <div class="sheet-grid">
         <button type="button" id="cobranzaWa" class="btn btn-green btn-lg">WhatsApp</button>

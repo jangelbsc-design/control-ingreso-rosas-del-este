@@ -58,5 +58,10 @@ var APP_CONFIG = {
 
   /* Versión visible de la app (ajústala cada vez que cambies algo).
      Sirve para comprobar de qué versión está cada teléfono. */
-  APP_VERSION: "6"
+  APP_VERSION: "7",
+
+  /* Imagen del QR de pago que se adjunta a los recordatorios
+     (cobranza para morosos y recordatorio para vigentes).
+     Guarda tu archivo en esa ruta, dentro de la carpeta de la app. */
+  QR_IMAGE: "imágenes/qr_pago.png"
 };

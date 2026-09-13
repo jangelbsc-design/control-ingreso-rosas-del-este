@@ -58,7 +58,8 @@ Todo se configura en **`js/config.js`**:
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado) | `0` |
 | `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
-| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `6` |
+| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `7` |
+| `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/qr_pago.png` |
 
 ### 3.3 Columnas de la hoja
 La app **reconoce las columnas automáticamente** por su nombre. Reconoce cualquier de estos encabezados:
@@ -183,6 +184,9 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 | En Bitácora dice **"Sin conexión"** | La app no pudo hablar con el web app (revisa red o BITACORA_URL). Se reintenta sola cada minuto. |
 | Registro no aparece en otros celulares | Verifica que `BITACORA_URL` esté en `config.js` (sección 10) y que en la bitácora diga **"En línea"**. Si el otro teléfono muestra una versión distinta (ej. `v5` en vez de `v6`), está desactualizado: cierra y abre la app 1–2 veces con internet (ver "Actualizar la app instalada"). |
 | No veo el botón de **cobranza** en la ficha | Tienes que estar **en mora** (tarjeta roja) y con la **sesión de admin iniciada** (sección 11): toca la versión o el logo → `Admin` + tu contraseña → "Cerrar sesión" para salir. |
+| El botón dice **Recordatorio de pago** y no cobranza | Correcto: es el botón para vecinos **vigentes**. En mora dice "Enviar recordatorio de cobranza". |
+| No aparece el **QR** en el recordatorio | Guarda tu imagen del QR como `imágenes/qr_pago.png` (o ajusta `QR_IMAGE` en `config.js`) y publica. Los mensajes siguen funcionando sin él. |
+| ¿Cómo envío WhatsApp con el **QR adjunto**? | Toca **WhatsApp** y usa el botón **Compartir** del teléfono eligiendo WhatsApp: la foto del QR viaja adjunta con el mensaje. Si no, guarda el QR y adjúntalo manualmente. |
 | ¿Cómo borro un **registro de la bitácora**? | Desde la app no se puede (se quitaron los botones a propósito). Se elimina desde tu hoja de cálculo: pestaña `bitacora`, borra la fila. El mismo celular lo verá desaparecer en ~1 minuto. |
 
 ---
@@ -212,20 +216,20 @@ La app usa **tu pestaña `bitacora`** (en minúsculas; si no existe, la crea sol
 
 ---
 
-## 11. Acceso de administración y mensaje de cobranza (por WhatsApp)
+## 11. Acceso de administración y recordatorios (cobranza y pago) por WhatsApp
 
-Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el **Admin** ve el botón de cobranza en la ficha de cada vecino **en mora**.
+Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el **Admin** ve los botones de recordatorio en la ficha de cada vecino: **"Enviar recordatorio de cobranza"** (para los **en mora**) y **"Recordatorio de pago"** (para los **vigentes**).
 
 1. **El login usa tu pestaña `Usuarios`** (puedes cambiarla en `js/config.js` con `SHEET_USERS`). La hoja debe tener **2 columnas**:
    - `USUARIO` | `CONTRASEÑA` (y, opcionalmente, una 3.ª columna `ROL`).
    - Ejemplo: la primera fila puede ser el encabezado; los usuarios van debajo (`Admin | 6567`, `Ingreso | 7845`, …).
    - Si el usuario (o el rol) contiene la palabra *"admin"*, la app lo trata como **administrador**.
-2. **Para iniciar sesión:** en la app, **toca la versión** (el "v6" de la Bitácora) o el **logo**. Se abre el formulario: usuario + contraseña. La sesión **queda guardada en ese celular** mientras no la cierres (botón "Cerrar sesión" en el mismo lugar).
-3. **Botón de cobranza:** estando en mora + sesión de admin, la ficha del vecino muestra **"Enviar recordatorio de cobranza"**. Al tocarlo:
-   - Se arma un **mensaje personalizado** (saludo según la hora + nombre + manzano) basado en este texto: expensas pendientes, beneficios, plusvalía, aviso "si ya pagó ignórelo" y la firma **Administración Rosas del Este Zona Sur**.
-   - Lo puedes **editar**, **copiar** o enviar directo por **WhatsApp** al número del vecino.
-
-> El mensaje queda en el portapapeles si tocas "Copiar", y se abre WhatsApp con el texto ya escrito si tocas "WhatsApp".
+2. **Para iniciar sesión:** en la app, **toca la versión** (el "v7" de la Bitácora) o el **logo**. Se abre el formulario: usuario + contraseña. La sesión **queda guardada en ese celular** mientras no la cierres (botón "Cerrar sesión" en el mismo lugar).
+3. **El QR de pago:** guarda tu imagen QR en la carpeta de la app como **`imágenes/qr_pago.png`** (puedes cambiarla en `js/config.js` con `QR_IMAGE`). Al abrir el recordatorio, la app muestra el QR y te permite **Guardar QR**.
+4. **Los dos mensajes** (se arman con saludo según la hora + **nombre del vecino + manzano y lote**):
+   - **En mora ("Cobranza"):** invita a regularizar el pago, menciona el QR adjunto, los beneficios de estar al día y firma **Administración Rosas del Este Zona Sur**.
+   - **Vigente ("Recordatorio de pago"):** *"Buenos días, estimado [Nombre] de Rosas del Este ([Manzano X - Lote Y]). Le enviamos este recordatorio para que pueda realizar el pago de sus expensas mediante el QR adjunto. Si usted ya realizó el pago, por favor ignore este mensaje. ¡Muchas gracias por su puntualidad y que tenga un excelente día!"* + firma.
+5. **Enviar por WhatsApp con el QR adjunto:** el botón **WhatsApp** usa el botón **"Compartir"** del teléfono (Web Share), así puedes elegir **WhatsApp** y la foto del QR **ya viaja adjunta** con el mensaje como descripción. Si tu navegador no permite adjuntar, la app abre el WhatsApp con el texto y te avisa para que adjuntes el QR guardado.
 
 ---
 
@@ -238,4 +242,4 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
 
 ---
 
-*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, login de administración con la pestaña `Usuarios` y **mensaje de cobranza por WhatsApp** — sección 11). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, login de administración con la pestaña `Usuarios`, **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*

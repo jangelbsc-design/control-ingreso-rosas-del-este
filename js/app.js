@@ -653,7 +653,10 @@ function openDetail(r) {
     addBitacora({ owner: r.ownerName, name: "", block: r.block, plate: r.plates.join(", "), via: "directorio" });
   };
 
-  $("dtCobrar").hidden = !(isAdmin() && r.status === "mora");
+  var admin = isAdmin();
+  $("dtCobrar").hidden = !(admin && (r.status === "mora" || r.status === "vigente"));
+  $("dtCobrar").className = "btn " + (r.status === "mora" ? "btn-cobranza" : "btn-cobranza-vig");
+  $("dtCobrarLabel").textContent = r.status === "mora" ? "Enviar recordatorio de cobranza" : "Recordatorio de pago";
 
   ov.hidden = false;
   document.body.classList.add("locked");
@@ -682,11 +685,14 @@ function whatsapp(number, r) {
   window.open("https://wa.me/" + number, "_blank");
 }
 
-/* ---------------- Mensaje de cobranza (solo administración) ---------------- */
+/* ---------------- Recordatorios de pago (solo administración) ---------------- */
+function greetingNow() {
+  var h = new Date().getHours();
+  return h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
+}
+
 function cobranzaText(r) {
-  var d = new Date();
-  var h = d.getHours();
-  var saludo = h < 12 ? "Buenos días" : h < 19 ? "Buenas tardes" : "Buenas noches";
+  var saludo = greetingNow();
   var nombre = String(r.ownerName || "").trim();
   var block = formatBlockLabel(r.block);
   var line1 = saludo + ", " + (nombre ? nombre + ", " : "") + "vecino de Rosas del Este" +
@@ -695,6 +701,7 @@ function cobranzaText(r) {
   return line1 + "\n\n" +
     "Le recordamos desde la Administración que sus expensas se encuentran pendientes. " +
     "Le invitamos a regularizar su pago a la brevedad para mantenerse al día con sus obligaciones.\n\n" +
+    "Puede realizar su pago mediante el QR adjunto.\n\n" +
     "Le recordamos que estar al día con las expensas no solo evita recargos, " +
     "sino que le permite gozar de todos los beneficios de la urbanización y, además, " +
     "aporta a la plusvalía y al mantenimiento del valor de su vivienda dentro de Rosas del Este.\n\n" +
@@ -703,13 +710,44 @@ function cobranzaText(r) {
     "Administración Rosas del Este Zona Sur";
 }
 
+function recordatorioText(r) {
+  var saludo = greetingNow();
+  var nombre = String(r.ownerName || "").trim() || "vecino";
+  var block = formatBlockLabel(r.block);
+  var line1 = saludo + ", estimado " + nombre + " de Rosas del Este" +
+    (block ? " (" + block + ")" : "") + ".";
+
+  return line1 + "\n\n" +
+    "Le enviamos este recordatorio para que pueda realizar el pago de sus expensas mediante el QR adjunto.\n\n" +
+    "Si usted ya realizó el pago, por favor ignore este mensaje. " +
+    "¡Muchas gracias por su puntualidad y que tenga un excelente día!\n\n" +
+    "Administración Rosas del Este Zona Sur";
+}
+
+var qrReady = false;
+
+function loadQr() {
+  var wrap = $("cobranzaQrWrap");
+  var img = $("cobranzaQr");
+  var path = APP_CONFIG.QR_IMAGE || "";
+  qrReady = false;
+  if (!path) { wrap.hidden = true; return; }
+  img.onload = function () { qrReady = true; wrap.hidden = false; };
+  img.onerror = function () { qrReady = false; wrap.hidden = true; };
+  img.src = path;
+}
+
 function openCobranza() {
   var r = state.selected;
   if (!r) return;
+  var mora = r.status === "mora";
   var nombre = r.ownerName || "Vecino";
   var tel = r.phones && r.phones.length ? formatPhoneDisplay(r.phones[0]) : "Sin número registrado";
-  $("cobranzaRecip").textContent = nombre + (r.block ? " · " + formatBlockLabel(r.block) : "") + " · " + tel;
-  $("cobranzaMsg").value = cobranzaText(r);
+  $("cobranzaRecip").textContent = (mora ? "Cobranza · " : "Pago · ") + nombre +
+    (r.block ? " · " + formatBlockLabel(r.block) : "") + " · " + tel;
+  $("cobranzaTitle").textContent = mora ? "Recordatorio de cobranza" : "Recordatorio de pago";
+  $("cobranzaMsg").value = mora ? cobranzaText(r) : recordatorioText(r);
+  loadQr();
   $("cobranzaOverlay").hidden = false;
   document.body.classList.add("locked");
   vib(10);
@@ -729,12 +767,59 @@ function copyCobranza() {
   }
 }
 
+function waDigits(r) {
+  return r && r.phonesDial && r.phonesDial[0]
+    ? r.phonesDial[0]
+    : (r && r.phones && r.phones[0] ? toDialNumber(r.phones[0], APP_CONFIG.COUNTRY_CODE) : "");
+}
+
+function openWaFallback(dial, msg) {
+  window.open("https://wa.me/" + dial + "?text=" + encodeURIComponent(msg), "_blank");
+  toast("Adjunta el QR guardado en WhatsApp");
+}
+
 function sendCobranzaWA() {
   var r = state.selected;
-  var dial = r && r.phonesDial && r.phonesDial[0] ? r.phonesDial[0] : (r && r.phones && r.phones[0] ? toDialNumber(r.phones[0], APP_CONFIG.COUNTRY_CODE) : "");
+  var dial = waDigits(r);
   if (!dial) { toast("Sin número de WhatsApp para este vecino"); return; }
   var msg = $("cobranzaMsg").value;
-  window.open("https://wa.me/" + dial + "?text=" + encodeURIComponent(msg), "_blank");
+
+  var canShare = typeof navigator.share === "function" && typeof navigator.canShare === "function";
+  if (canShare && qrReady) {
+    fetch(APP_CONFIG.QR_IMAGE)
+      .then(function (res) { if (!res.ok) throw new Error("http"); return res.blob(); })
+      .then(function (blob) {
+        var file = new File([blob], "qr_pago.png", { type: blob.type || "image/png" });
+        var data = { files: [file], text: msg };
+        if (!navigator.canShare(data)) throw new Error("noshare");
+        return navigator.share(data);
+      })
+      .then(function () { /* enviado o cancelado por el usuario */ })
+      .catch(function (e) {
+        if (e && e.name === "AbortError") return;
+        openWaFallback(dial, msg);
+      });
+    return;
+  }
+  openWaFallback(dial, msg);
+}
+
+function saveQrImage() {
+  var path = APP_CONFIG.QR_IMAGE;
+  if (!path) { toast("No hay imagen QR configurada"); return; }
+  fetch(path)
+    .then(function (res) { if (!res.ok) throw new Error("http"); return res.blob(); })
+    .then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "qr_pago.png";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 200);
+      toast("QR descargado");
+    })
+    .catch(function () { toast("No se pudo descargar el QR"); });
 }
 
 /* ---------------- Hoja de acciones del teléfono ---------------- */
@@ -1294,6 +1379,7 @@ function init() {
   $("cobranzaCancel").addEventListener("click", closeCobranza);
   $("cobranzaCopy").addEventListener("click", copyCobranza);
   $("cobranzaWa").addEventListener("click", sendCobranzaWA);
+  $("cobranzaQrSave").addEventListener("click", saveQrImage);
 
   // hoja de acciones del teléfono
   $("psCall").addEventListener("click", function () {
