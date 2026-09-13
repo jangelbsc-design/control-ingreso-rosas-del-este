@@ -1148,10 +1148,11 @@ function init() {
   window.addEventListener("scroll", syncToTopBtn, { passive: true });
   syncToTopBtn();
 
-  // registro del service worker (siempre mantiene la versión actualizada)
+  // registro del service worker (mantiene la versión actualizada)
   if (navigator.serviceWorker) {
     var hadController = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.register("sw.js").then(function (reg) {
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (reg) {
+      reg.update();
       reg.addEventListener("updatefound", function () {
         var sw = reg.installing;
         if (!sw) return;
