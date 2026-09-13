@@ -33,7 +33,7 @@ body {
   background: var(--gris-bg);
   color: var(--negro);
   -webkit-font-smoothing: antialiased;
-  padding-bottom: 84px; /* espacio para la barra inferior */
+  padding-bottom: calc(96px + env(safe-area-inset-bottom)); /* espacio para la barra inferior */
 }
 
 main { max-width: 640px; margin: 0 auto; padding: 0 14px; }
