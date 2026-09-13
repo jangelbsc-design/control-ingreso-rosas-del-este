@@ -147,7 +147,7 @@ function splitOwners(raw) {
 function gvizURL(sheetName, cbName) {
   var url = "https://docs.google.com/spreadsheets/d/" + APP_CONFIG.SPREADSHEET_ID +
     "/gviz/tq?tqx=out:json;responseHandler:" + cbName +
-    "&rnd=" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+    "&headers=1&rnd=" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
   if (sheetName) url += "&sheet=" + encodeURIComponent(sheetName);
   return url;
 }
@@ -202,7 +202,8 @@ function loadViaJSONP(sheetName, cb) {
 
 function loadViaExportCSV(cb) {
   var url = "https://docs.google.com/spreadsheets/d/" + APP_CONFIG.SPREADSHEET_ID +
-    "/export?format=csv&gid=0";
+    "/gviz/tq?tqx=out:csv&headers=1&rnd=" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+  if (APP_CONFIG.SHEET_NAME) url += "&sheet=" + encodeURIComponent(APP_CONFIG.SHEET_NAME);
   fetch(url, { cache: "no-store" })
     .then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status);
