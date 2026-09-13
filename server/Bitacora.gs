@@ -54,6 +54,33 @@ function getTab_() {
   return sh;
 }
 
+function fmtDate_(v) {
+  if (v instanceof Date && !isNaN(v)) {
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), "dd/MM/yyyy");
+  }
+  if (typeof v === "string") {
+    var part = v.split("T")[0]; // quita hora en ISO
+    if (/^\d{4}-\d{2}-\d{2}/.test(part)) {
+      var d = part.split("-");
+      return d[2] + "/" + d[1] + "/" + d[0];
+    }
+    return v;
+  }
+  return String(v || "");
+}
+
+function fmtTime_(v) {
+  if (v instanceof Date && !isNaN(v)) {
+    return Utilities.formatDate(v, Session.getScriptTimeZone(), "HH:mm:ss");
+  }
+  if (typeof v === "string" && v.indexOf("T") !== -1) {
+    var t = v.split("T")[1] || "";
+    t = t.replace(/Z$/, "").split(".")[0];
+    return t;
+  }
+  return String(v || "");
+}
+
 function readRows_() {
   var sh = getTab_();
   var values = sh.getDataRange().getValues();
@@ -64,15 +91,22 @@ function readRows_() {
     if (String(values[i][0]).trim() === "") continue; // fila vacía
     var o = {};
     for (var k = 0; k < headers.length; k++) {
-      o[String(headers[k]).trim().toLowerCase()] = values[i][k];
+      var key = String(headers[k]).trim().toLowerCase();
+      var v = values[i][k];
+      if (key === "fecha") v = fmtDate_(v);
+      else if (key === "hora") v = fmtTime_(v);
+      o[key] = v;
     }
     out.push(o);
   }
   out.sort(function (a, b) {
-    var na = Number(a.ts || a.id || 0), nb = Number(b.ts || b.id || 0);
-    if (isNaN(na)) na = 0;
-    if (isNaN(nb)) nb = 0;
-    return nb - na;
+    function ts(o) {
+      var s = String(o.id || "").split("-")[0];
+      if (!s) return 0;
+      var n = parseInt(s, 36);
+      return isNaN(n) ? 0 : n;
+    }
+    return ts(b) - ts(a);
   });
   return out;
 }

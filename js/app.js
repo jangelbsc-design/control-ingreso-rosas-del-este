@@ -731,19 +731,57 @@ function clearTodayBitacora() {
 /* ---------------- Sincronización entre dispositivos ---------------- */
 var syncing = false;
 
-function normalizeRemote(x) {
+function pickRemote(x, keys, fallback) {
+  for (var i = 0; i < keys.length; i++) {
+    var v = x[keys[i]];
+    if (v !== undefined && v !== null && String(v) !== "") return String(v);
+  }
+  return fallback || "";
+}
+
+function remoteTime(v) {
+  var s = String(v || "");
+  if (s.indexOf("T") !== -1) {
+    var t = s.split("T")[1] || "";
+    t = t.replace(/Z$/, "").split(".")[0];
+    return t;
+  }
+  return s;
+}
+
+function remoteDate(v) {
+  var s = String(v || "");
+  var part = s.split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}/.test(part)) {
+    var d = part.split("-");
+    return d[2] + "/" + d[1] + "/" + d[0];
+  }
+  return s;
+}
+
+function remoteTs(x) {
   var n = Number(x.ts);
+  if (!isNaN(n) && n > 0) return n;
+  var s = String(x.id || "").split("-")[0];
+  var bn = parseInt(s, 36);
+  return isNaN(bn) ? Date.now() : bn;
+}
+
+function normalizeRemote(x) {
+  var e = x || {};
+  var id = String(e.id || "");
+  if (!id) id = String(e.ID || "");
   return {
-    id: String(x.id || ""),
-    ts: isNaN(n) ? Date.now() : n,
-    time: String(x.time || ""),
-    dateLabel: String(x.dateLabel || ""),
-    block: String(x.block || ""),
-    owner: String(x.owner || ""),
-    name: String(x.name || ""),
-    plate: String(x.plate || ""),
-    note: String(x.note || ""),
-    via: String(x.via || "manual")
+    id: id,
+    ts: remoteTs(e),
+    time: remoteTime(pickRemote(e, ["hora", "time", "HORA", "Hora"])),
+    dateLabel: remoteDate(pickRemote(e, ["fecha", "dateLabel", "FECHA", "Fecha"])),
+    block: pickRemote(e, ["manzano", "block", "MANZANO"]),
+    owner: pickRemote(e, ["propietario", "owner", "PROPIETARIO"]),
+    name: pickRemote(e, ["visitante", "name", "VISITANTE"]),
+    plate: pickRemote(e, ["placa", "plate", "PLACA"]),
+    note: pickRemote(e, ["nota", "note", "NOTA"]),
+    via: pickRemote(e, ["origen", "via", "ORIGEN"], "manual")
   };
 }
 
