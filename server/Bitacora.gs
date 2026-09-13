@@ -142,10 +142,16 @@ function doPost(e) {
 
     if (action === "add") {
       var en = body.entry || {};
+      // El apóstrofo inicial hace que Sheets guarde el texto tal cual
+      // (sin convertirlo a fecha/hora, que lo corrompería).
+      var txt_ = function (s) {
+        s = String(s == null ? "" : s);
+        return s.length ? "'" + s : "";
+      };
       getTab_().appendRow([
         String(en.id || ""),
-        String(en.dateLabel || ""),
-        String(en.time || ""),
+        txt_(en.dateLabel),
+        txt_(en.time),
         String(en.block || ""),
         String(en.owner || ""),
         String(en.name || ""),
