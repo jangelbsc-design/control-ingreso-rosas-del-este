@@ -20,6 +20,17 @@ function collapseSpaces(value) {
   return String(value).replace(/\s+/g, " ").trim();
 }
 
+/* Convierte "M21 - 21", "M21-01" o "M22 _03" en "Manzano 21 - Lote 21". */
+function formatBlockLabel(value) {
+  if (value == null) return "";
+  var s = collapseSpaces(String(value)).replace(/[\u2013\u2014\-_\/]+/g, "-");
+  var m = /^[^\d]*(\d+)\s*-\s*(\d+)/.exec(s);
+  if (m) return "Manzano " + m[1] + " - Lote " + m[2];
+  var n = /^[^\d]*(\d+)/.exec(s);
+  if (n) return "Manzano " + n[1];
+  return s;
+}
+
 function toTitleCase(value) {
   var s = collapseSpaces(value);
   return s.replace(/\w\S*/g, function (t) {

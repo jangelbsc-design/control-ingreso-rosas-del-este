@@ -367,7 +367,7 @@ function cardFor(r) {
 
   var block = document.createElement("span");
   block.className = "chip chip-block";
-  block.textContent = r.block || "—";
+  block.textContent = formatBlockLabel(r.block);
   top.appendChild(block);
 
   top.appendChild(statusPill(r));
@@ -466,7 +466,7 @@ function openDetail(r) {
   banner.appendChild(bTitle);
   banner.appendChild(bSub);
 
-  $("dtBlock").textContent = r.block || "—";
+  $("dtBlock").textContent = formatBlockLabel(r.block) || "—";
 
   var nameEl = $("dtName");
   nameEl.innerHTML = "";
