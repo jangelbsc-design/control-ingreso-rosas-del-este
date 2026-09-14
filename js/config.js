@@ -38,7 +38,7 @@ var APP_CONFIG = {
 
   /* Intervalo en minutos para recargar los datos de forma
      automática. Poner 0 para desactivar la recarga. */
-  AUTO_REFRESH_MIN: 0,
+  AUTO_REFRESH_MIN: 5,
 
   /* Guardar los datos en el navegador para funcionar offline */
   OFFLINE_CACHE: true,
@@ -58,7 +58,7 @@ var APP_CONFIG = {
 
   /* Versión visible de la app (ajústala cada vez que cambies algo).
      Sirve para comprobar de qué versión está cada teléfono. */
-  APP_VERSION: "15",
+  APP_VERSION: "16",
 
   /* Imagen del QR de pago que se adjunta a los recordatorios
      (cobranza para morosos y recordatorio para vigentes).

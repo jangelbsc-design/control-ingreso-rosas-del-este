@@ -59,9 +59,9 @@ Todo se configura en **`js/config.js`**:
 | `SHEET_NAME` | Nombre exacto de la pestaña con la base de vecinos | `PROPIETARIOS` |
 | `SHEET_USERS` | Pestaña con los usuarios y contraseñas del login | `Usuarios` |
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
-| `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado) | `0` |
+| `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado, ahora recarga sola cada 5 min) | `5` |
 | `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
-| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `14` |
+| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `16` |
 | `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/QR pago expensas.jpeg` |
 
 ### 3.3 Columnas de la hoja
