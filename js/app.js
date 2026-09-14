@@ -271,7 +271,7 @@ function mapColumns(headers) {
     extras.push({ label: collapseSpaces(h) || ("Columna " + (i + 1)), index: i });
   });
 
-  return { statusIdx: statusIdx, blockIdx: map.block, ownerIdx: map.owner, phoneIdx: map.phone, plateIdx: map.plate, extras: extras };
+  return { statusIdx: statusIdx, blockIdx: map.block, ownerIdx: map.owner, phoneIdx: map.phone, plateIdx: map.plate, locationIdx: map.location, extras: extras };
 }
 
 /* ---------------- Procesado de registros ---------------- */
