@@ -58,6 +58,16 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 14px; font-weight: 800; letter-spacing: .2px; line-height: 1.1;
 }
 .top-right { display: flex; align-items: center; gap: 8px; }
+.install-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--verde); color: var(--blanco);
+  border: 0; border-radius: 999px;
+  font-size: 12px; font-weight: 800; letter-spacing: .2px;
+  padding: 7px 13px; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(11, 11, 13, .3);
+}
+.install-btn svg { display: block; }
+.install-btn:active { transform: scale(.95); }
 
 /* ---------------- Volver arriba ---------------- */
 .to-top {

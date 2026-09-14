@@ -20,6 +20,45 @@ var CACHE_KEY = "rde_cache_v1";
 var BITACORA_KEY = "rde_bitacora_v1";
 var SESSION_KEY = "rde_session_v1";
 
+/* ---------------- Instalación PWA ---------------- */
+var deferredPrompt = null;
+
+function setupInstallPrompt() {
+  var btn = $("installBtn");
+  if (!btn) return;
+
+  // Ya está instalada como app: no mostrar el botón.
+  if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return;
+
+  // Chrome/Android/Desktop avisan que se puede instalar.
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    btn.hidden = false;
+  });
+
+  btn.addEventListener("click", function () {
+    vib(10);
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function (choice) {
+      if (choice.outcome === "accepted") {
+        toast("Instalando aplicación…");
+        btn.hidden = true;
+      } else {
+        toast("Puedes instalar desde el menú ⋮ del navegador");
+      }
+      deferredPrompt = null;
+    });
+  });
+
+  window.addEventListener("appinstalled", function () {
+    deferredPrompt = null;
+    btn.hidden = true;
+    toast("Aplicación instalada");
+  });
+}
+
 /* ---------------- Sesión de administración ---------------- */
 function getSession() {
   try {
@@ -1516,6 +1555,9 @@ function init() {
   setInterval(renderToday, 30000);
 
   refreshSessionTag();
+
+  // instalación PWA
+  setupInstallPrompt();
 
   // búsqueda
   var searchInput = $("searchInput");
