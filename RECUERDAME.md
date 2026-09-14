@@ -14,7 +14,9 @@ Es una web app (instalable en el celular como una app normal) para que el guardi
 - Teléfono(s) con botones de **Llamar** y **WhatsApp** (uno por cada número; acepta 2 o 3 números de referencia en una misma casilla)
 - Botón **Registrar ingreso** que guarda el evento en la bitácora
 
-También incluye una **Bitácora de ingresos** (con hora y fecha, exportable a CSV) y un **registro manual** para visitantes o vehículos externos. Abajo hay **dos botones separados: "Registro" y "Bitácora"**. En la cabecera se muestra tu logo (`imágenes/logo.webp`); si lo quitas o renombras, la app usa por defecto un escudo verde.
+También incluye una **Bitácora de ingresos** (con hora y fecha, exportable a CSV) que **agrupa los registros por día**: al pasar la medianoche o al entrar el primer dato del día nuevo, la pestaña Bitácora muestra un **encabezado negro con el día y la fecha** (ej. "Sábado, 13 de septiembre de 2026"), para distinguir de un vistazo cada jornada. Hay un **registro manual** para visitantes o vehículos externos y abajo hay **dos botones separados: "Registro" y "Bitácora"**.
+
+En la cabecera se muestra tu logo (`imágenes/logo.webp`) y, cuando el navegador permite la instalación, un botón verde **"Instalar"** que agrega la app al celular como aplicación nativa (sección 5). El **ícono y la pantalla de inicio** de la app instalada se generan a partir de tu logo (los PNG en `icons/`), no del escudo por defecto. Si quitas o renombras `imágenes/logo.webp`, la app muestra por defecto un escudo verde en la cabecera.
 
 La app se sincroniza con los registros de todos los celulares (sección 10) y tiene un **acceso de administración** con tu pestaña `Usuarios` que permite al Admin **enviar recordatorios de cobranza por WhatsApp** a los vecinos en mora (sección 11).
 
@@ -110,17 +112,17 @@ Para "refrescar" los datos guardados, abre la app con internet y recarga.
 
 ## 5. Instalar la app en el celular (como app nativa)
 
-La app es una **PWA** (Progressive Web App). Para instalarla:
+La app es una **PWA** (Progressive Web App). En **Android (Chrome)** tiene de fábrica un botón verde **"Instalar"** en la barra superior: tócalo y aparece el cuadro del navegador para instalar. Si no lo ves (o prefieres el menú):
 
 **Android (Chrome):**
 1. Abre la app en Chrome.
 2. Toca los 3 puntos (⋮) → **"Instalar app"** o "Agregar a pantalla de inicio".
 
 **iPhone/iPad (Safari):**
-1. Abre la app en Safari.
+1. Abre la app en Safari. (En iPhone **no existe** el botón "Instalar": Safari no lo permite.)
 2. Toca el botón Compartir (cuadro con flecha) → **"Agregar a pantalla de inicio"**.
 
-Quedará como un ícono en tu pantalla, a pantalla completa, sin barra del navegador.
+> El botón **"Instalar"** solo aparece cuando el navegador detecta que la app es instalable (Chrome en Android/PC y sirviendo por HTTPS). Una vez instalada, el botón desaparece. La app queda como un ícono en tu pantalla, a pantalla completa y sin barra del navegador. El **ícono y el arranque** usan el logo de la urbanización (PNG en `icons/`).
 
 ---
 
@@ -215,7 +217,7 @@ Para que los registros de un guardia **se vean al instante en cualquier otro cel
    ```
 8. Vuelve a abrir la app en cada celular (cierra/abre una vez). En la **Bitácora** debe aparecer el indicador **"En línea"**.
 
-La app usa **tu pestaña `bitacora`** (en minúsculas; si no existe, la crea sola). Añade el encabezado (si está vacía) y guarda cada ingreso en las columnas: `ID · FECHA · HORA · MANZANO · PROPIETARIO · VISITANTE · PLACA · NOTA · ORIGEN`. Ahí podrás ver desde tu PC todos los ingresos en vivo, y también quedan en la hoja como respaldo.
+La app usa **tu pestaña `bitacora`** (en minúsculas; si no existe, la crea sola). Añade el encabezado (si está vacía) y guarda cada ingreso en las columnas: `ID · FECHA · HORA · MANZANO · PROPIETARIO · VISITANTE · PLACA · NOTA · ORIGEN`. Ahí podrás ver desde tu PC todos los ingresos en vivo, y también quedan en la hoja como respaldo. Cada fila guarda su **FECHA** (dd/mm/aaaa); en la pestaña **Bitácora** de la app esos registros se agrupan por día con un encabezado negro (sección 1).
 
 > **Cómo funciona por dentro:** cada celular guarda sus registros localmente (para funcionar sin internet) y los **envía al web app**, que los escribe en la hoja. La app **pide los registros cada minuto** (y al abrirla) y los mezcla, así todos ven lo mismo. Si un celular está desconectado, guarda la entrada en espera y la envía en cuanto vuelve la red. Igual con los **borrados**: si un Admin borra un registro sin conexión, ese borrado se anota en el celular y se envía al web app cuando vuelve la red, de modo que el registro no reaparece al sincronizar.
 
@@ -243,6 +245,18 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
 
 ---
 
+## 12. Botón "atrás" del teléfono (Android)
+
+El botón atrás del celular **no saca de la app de una vez**; se comporta como "volver atrás" dentro de la app:
+
+- Si hay una ventana abierta (ficha del vecino, acciones del teléfono, recordatorio de cobranza o acceso de administración), la **cierra**.
+- Si estás en **Bitácora**, **Registro** o **Admin**, vuelve a la **pantalla principal** (Directorio).
+- Si ya estás en la pantalla principal, aparece un aviso discreto: **"Para salir, presiona atrás otra vez"**. Si presionas atrás nuevamente dentro de ~2 segundos, la app **se cierra**.
+
+Es el patrón "doble atrás para salir" que usan la mayoría de las apps de Android. Funciona también en la versión web del navegador; en iPhone no hay botón atrás físico.
+
+---
+
 ## 9. Mejoras posibles (para después)
 
 - 🔒 La app ya **exige iniciar sesión** para usarse (bloqueada con la pantalla de inicio, pestaña `Usuarios`). Pendiente si algún día se quiere: validación 100 % servidora (que las "contraseñas" no viajen como texto visible en la página pública).
@@ -252,4 +266,4 @@ Hay usuarios con rol **Admin** y otros solo de **Ingreso** (guardias). Solo el *
 
 ---
 
-*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, y **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, y **bitácora agrupada por día con encabezado negro** — sección 1). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
