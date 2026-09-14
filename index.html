@@ -283,6 +283,21 @@
           <div id="dtExtra" class="dt-extra"></div>
         </div>
 
+        <div id="dtMapWrap" class="dt-section" hidden>
+          <h3>Ubicación del lote</h3>
+          <a id="dtMapLink" class="mini-map-link" href="#" target="_blank" rel="noopener">
+            <iframe id="dtMapFrame" class="mini-map" title="Mapa del lote" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <span class="mini-map-hint">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/>
+                <circle cx="12" cy="10" r="2.5"/>
+              </svg>
+              Abrir en Google Maps
+            </span>
+          </a>
+        </div>
+
         <div class="detail-actions detail-actions-secondary">
           <button type="button" id="dtCopiar" class="btn btn-outline-dark">Copiar placa</button>
           <button type="button" id="dtRegistrar" class="btn btn-outline-green">Registrar ingreso</button>

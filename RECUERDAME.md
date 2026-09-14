@@ -12,6 +12,7 @@ Es una web app (instalable en el celular como una app normal) para que el guardi
 - Propietario(s) — la tarjeta y la ficha muestran **"Manzano X - Lote Y"** (ej. `M21 - 21` → "Manzano 21 - Lote 21")
 - Placa(s) del vehículo en formato "chapa"
 - Teléfono(s) con botones de **Llamar** y **WhatsApp** (uno por cada número; acepta 2 o 3 números de referencia en una misma casilla)
+- **Mini mapa de Google** si la hoja tiene la columna `UBICACIÓN` (GPS del lote): muestra una vista previa del mapa dentro de la ficha y al presionarla abre **Google Maps completo** con esa ubicación
 - Botón **Registrar ingreso** que guarda el evento en la bitácora
 
 También incluye una **Bitácora de ingresos** (con hora y fecha, exportable a CSV) que **agrupa los registros por día**: al pasar la medianoche o al entrar el primer dato del día nuevo, la pestaña Bitácora muestra un **encabezado negro con el día y la fecha** (ej. "Sábado, 13 de septiembre de 2026"), para distinguir de un vistazo cada jornada. Hay un **registro manual** para visitantes o vehículos externos y abajo hay **dos botones separados: "Registro" y "Bitácora"**.
@@ -72,12 +73,20 @@ La app **reconoce las columnas automáticamente** por su nombre. Reconoce cualqu
 | Propietario | `PROPIETARIO`, `PROPIETARIOS`, `NOMBRE` |
 | Celular | `CELULAR`, `NO. CELULAR`, `TELÉFONO` |
 | Placa | `PLACA`, `PLACA VEHÍCULO`, `MATRÍCULA`, `PATENTE` |
+| Ubicación | `UBICACIÓN`, `UBICACION GPS`, `GPS`, `COORDENADAS`, `LATITUD` (muestra un mini mapa en la ficha) |
 | Estado | `ESTADO`, `MOROSO` (acepta `VIGENTE` / `EN MORA` / `MOROSO`) |
 | (opcional) | `TIPO`, `SITUACION`, `CANCELADO`, `COMENTARIO`, `GESTIÓN DE COBRANZAS` se muestran como "Detalles" extra en la ficha |
 
 Tu pestaña `PROPIETARIOS` tiene exactamente: `MANZANO · PROPIETARIO · CELULAR · ESTADO · PLACA`. Solo quedó pendiente tu parte: **llenar la columna PLACA** con las carrocerías de cada vecino.
 
-### 3.4 Números de celular — IMPORTANTE
+### 3.4 Columna UBICACIÓN (mini mapa en la ficha)
+Si agregas una columna `UBICACIÓN` (o `GPS`, `COORDENADAS`, `LATITUD`), la ficha de cada vecino mostrará un **mini mapa** de esa ubicación y, al tocarlo, abrirá **Google Maps** completo. Puedes poner:
+- **Coordenadas**: `-17.7833, -63.1821` (latitud, longitud del lote), o
+- **Una dirección o punto**: ej. `Av. Banzer Km 9, Santa Cruz`.
+
+> El mini mapa se genera con el *embed* público de Google Maps (no requiere API key). Necesita internet para cargar; si estás offline se ve en blanco pero el resto de la ficha funciona igual.
+
+### 3.5 Números de celular — IMPORTANTE
 La columna **CELULAR** debe estar formateada como **"Texto sin formato"** para que muestre los números múltiples:
 
 1. En la hoja, haz clic en la **letra de la columna CELULAR** para seleccionarla toda.
@@ -176,7 +185,7 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 |---|---|
 | "Sin datos · Verifica la hoja" en rojo | La hoja no está compartida como *cualquiera con el enlace → Lector*, o cambió el `SPREADSHEET_ID`/`SHEET_NAME` en `config.js`. |
 | La app abre con **0 vecinos** | Esto pasaba cuando la app no pedía encabezados a Google. Ya está corregido; si vuelve, cierra la app y ábrela 1–2 veces (actualiza la copia guardada). |
-| Un teléfono **no aparece** aunque esté en la hoja | La columna CELULAR está como *número*: ponla en **Texto sin formato** (ver punto 3.4) para que no borre las casillas con guiones. |
+| Un teléfono **no aparece** aunque esté en la hoja | La columna CELULAR está como *número*: ponla en **Texto sin formato** (ver punto 3.5) para que no borre las casillas con guiones. |
 | Encontrar datos de otra pestaña | El `SHEET_NAME` en `config.js` no coincide con la pestaña correcta. |
 | No aparece la placa | La columna `PLACA` está vacía en la hoja para ese vecino. La ficha muestra "Sin placa registrada". |
 | Búsqueda con tildes no encuentra | No importa: la app ignora mayúsculas, tildes y guiones. |
@@ -266,4 +275,4 @@ Es el patrón "doble atrás para salir" que usan la mayoría de las apps de Andr
 
 ---
 
-*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, y **bitácora agrupada por día con encabezado negro** — sección 1). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: septiembre 2026 (tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*

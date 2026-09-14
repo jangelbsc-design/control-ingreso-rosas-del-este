@@ -224,6 +224,7 @@ var COLUMN_RULES = [
   { key: "owner",    aliases: ["propietario", "propietarios", "propietario(s)", "propietario (s)"], matchAny: ["propiet", "propietario", "nombre propiet"] },
   { key: "phone",    aliases: ["no celular", "no telefono", "celular", "telefono", "cel", "cel.", "numero de celular"], matchAny: ["celular", "telefono", "cel", "movil"] },
   { key: "plate",    aliases: ["placa", "placa vehiculo", "placa del vehiculo", "placa veh", "matricula", "patente"], matchAny: ["placa", "matric", "patente", "vehic", "veh"] },
+  { key: "location",  aliases: ["ubicacion", "ubicacion gps", "gps", "coordenadas", "coordenada", "latitud", "longitud", "lat, long"], matchAny: ["ubicacion", "gps", "coordenad", "mapa"] },
   { key: "moroso",   aliases: ["moroso", "situacion pago", "estado pago"], matchAny: ["moroso"] },
   { key: "estado",   aliases: ["estado", "situacion" ], matchAny: [] }
 ];
@@ -244,7 +245,7 @@ function mapColumns(headers) {
           if (!hit && n) {
             var nf = n;
             if (nf.indexOf(frag) !== -1 && rule.key === "block" && nf.indexOf("mazo") !== -1) hit = true;
-            if (nf.indexOf(frag) !== -1 && (rule.key === "owner" || rule.key === "phone" || rule.key === "plate")) hit = true;
+            if (nf.indexOf(frag) !== -1 && (rule.key === "owner" || rule.key === "phone" || rule.key === "plate" || rule.key === "location")) hit = true;
           }
         });
       }
@@ -290,6 +291,7 @@ function buildRows(cols, records) {
     var ownerRaw = cell(m.ownerIdx);
     var statusRaw = cell(m.statusIdx);
     var status = statusOf(statusRaw);
+    var location = collapseSpaces(cell(m.locationIdx));
     var phones = extractPhones(cell(m.phoneIdx), APP_CONFIG.COUNTRY_CODE);
     var plates = extractPlates(cell(m.plateIdx));
 
@@ -316,6 +318,7 @@ function buildRows(cols, records) {
       phones: phones,
       phonesDial: phones.map(function (p) { return toDialNumber(p, cc); }),
       plates: plates,
+      location: location,
       statusRaw: statusLabel(statusRaw),
       status: status,
       statusScore: status === "vigente" ? 2 : status === "mora" ? 1 : 0,
@@ -770,6 +773,18 @@ function openDetail(r) {
     row.appendChild(v);
     extraList.appendChild(row);
   });
+
+  var locWrap = $("dtMapWrap");
+  if (r.location) {
+    var q = encodeURIComponent(r.location);
+    var frame = $("dtMapFrame");
+    frame.src = "https://maps.google.com/maps?q=" + q + "&z=17&output=embed";
+    $("dtMapLink").href = "https://www.google.com/maps?q=" + q;
+    locWrap.hidden = false;
+  } else {
+    locWrap.hidden = true;
+    $("dtMapFrame").src = "";
+  }
 
   $("dtCopiar").onclick = function () {
     if (!r.plates.length) { toast("No hay placa que copiar"); return; }
