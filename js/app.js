@@ -20,6 +20,50 @@ var CACHE_KEY = "rde_cache_v1";
 var BITACORA_KEY = "rde_bitacora_v1";
 var SESSION_KEY = "rde_session_v1";
 
+/* ---------------- Botón atrás del teléfono (Android) ----------------
+   Patrón más usado en PWAs: un "centinela" de historial intercepta el
+   botón atrás. Si hay overlays o una vista secundaria abierta, regresa
+   dentro de la app; en la pantalla principal avisa (discreto) que hay
+   que presionar atrás otra vez para salir. */
+var backGuard = { armed: false, last: 0 };
+
+function rearmBackGuard() {
+  try { window.history.pushState({ rdeGuard: 1 }, ""); } catch (e) { /* sin historial */ }
+}
+
+function onBackPressed() {
+  // 1) Cerrar el overlay más profundo que esté abierto.
+  if (!$("loginOverlay").hidden) { closeLogin(); return; }
+  if (!$("cobranzaOverlay").hidden) { closeCobranza(); return; }
+  if (!$("phoneSheet").hidden) { closePhoneSheet(); return; }
+  if (!$("detailOverlay").hidden) { closeDetail(); return; }
+
+  // 2) Si se está en una vista secundaria, volver a la principal.
+  if (state.view !== "directorio") { switchView("directorio"); return; }
+
+  // 3) Pantalla principal: aviso de doble atrás para salir.
+  var now = Date.now();
+  if (!backGuard.armed || now - backGuard.last > 2200) {
+    backGuard.armed = true;
+    backGuard.last = now;
+    toast("Para salir, presiona atrás otra vez");
+    rearmBackGuard();
+    return;
+  }
+
+  // Segundo atrás dentro de la ventana: salir de la app.
+  backGuard.armed = false;
+  if (history.length > 1) history.back();
+}
+
+function setupBackButton() {
+  window.addEventListener("popstate", function () {
+    rearmBackGuard();
+    onBackPressed();
+  });
+  rearmBackGuard();
+}
+
 /* ---------------- Instalación PWA ---------------- */
 var deferredPrompt = null;
 
@@ -1283,7 +1327,15 @@ function renderBitacora(filterToday) {
   }
 
   var frag = document.createDocumentFragment();
+  var lastDay = null;
   list.forEach(function (e) {
+    if (e.dateLabel !== lastDay) {
+      lastDay = e.dateLabel;
+      var day = document.createElement("div");
+      day.className = "bit-dayhead";
+      day.textContent = dayHeaderLabel(e.dateLabel);
+      frag.appendChild(day);
+    }
     var item = document.createElement("div");
     item.className = "bit-item";
 
@@ -1558,6 +1610,9 @@ function init() {
 
   // instalación PWA
   setupInstallPrompt();
+
+  // botón atrás del teléfono (Android)
+  setupBackButton();
 
   // búsqueda
   var searchInput = $("searchInput");

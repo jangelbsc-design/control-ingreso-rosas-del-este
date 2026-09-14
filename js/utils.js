@@ -156,6 +156,16 @@ function sameDateKey(ts) {
   return pad2(d.getDate()) + "/" + pad2(d.getMonth() + 1) + "/" + d.getFullYear();
 }
 
+/* Convierte "13/09/2026" en "Sábado, 13 de septiembre de 2026". */
+function dayHeaderLabel(label) {
+  var m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(label || "").trim());
+  if (!m) return String(label || "");
+  var days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+  var months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  var d = new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  return days[d.getDay()] + ", " + Number(m[1]) + " de " + months[d.getMonth()] + " de " + m[3];
+}
+
 function escapeHTML(value) {
   return String(value == null ? "" : value)
     .replace(/&/g, "&amp;")
