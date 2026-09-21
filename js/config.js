@@ -23,6 +23,13 @@ var APP_CONFIG = {
   SPREADSHEET_ID: "1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO",
   SHEET_NAME: "PROPIETARIOS",
 
+  /* Numero de hoja (gid) de la pestaña SHEET_NAME. Se ve en la URL de
+     la pestaña: .../edit#gid=<ESTE_NUMERO>. Se usa para descargar la
+     hoja en crudo y así conservar los teléfonos con guiones/espacios
+     (Google los borra en el formato número). Puedes dejarlo "" para
+     desactivarlo y volver a solo gviz. */
+  SHEET_GID: "1653009094",
+
   /* Pestaña con los usuarios y contraseñas para iniciar sesión
      (columnas: USUARIO · CONTRASEÑA · [ROL opcional]).
      El rol "admin" (o un usuario que contenga "admin") ve las
@@ -58,7 +65,7 @@ var APP_CONFIG = {
 
   /* Versión visible de la app (ajústala cada vez que cambies algo).
      Sirve para comprobar de qué versión está cada teléfono. */
-  APP_VERSION: "17",
+  APP_VERSION: "18",
 
   /* Imagen del QR de pago que se adjunta a los recordatorios
      (cobranza para morosos y recordatorio para vigentes).

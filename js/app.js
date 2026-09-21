@@ -415,6 +415,30 @@ function loadViaExportCSV(cb) {
     .catch(function (e) { cb(e); });
 }
 
+/* Descarga la hoja en CRUDO por su gid. A diferencia de gviz, este
+   export NO convierte los datos por tipo de columna: si la columna
+   CELULAR está como número, Google borra las casillas con guiones o
+   espacios (ej. "71616102 - 75015599") en gviz, pero aquí se
+   conservan intactas. Es el método principal de lectura. */
+function loadViaRawCSV(cb) {
+  var gid = APP_CONFIG.SHEET_GID;
+  if (!gid) { cb(new Error("sin gid")); return; }
+  var url = "https://docs.google.com/spreadsheets/d/" + APP_CONFIG.SPREADSHEET_ID +
+    "/export?format=csv&gid=" + encodeURIComponent(gid) +
+    "&rnd=" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+  fetch(url, { cache: "no-store" })
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    })
+    .then(function (text) {
+      var rows = parseCSV(text.replace(/^\uFEFF/, ""));
+      if (!rows.length) throw new Error("CSV vacío");
+      cb(null, { cols: rows[0], rows: rows.slice(1) });
+    })
+    .catch(function (e) { cb(e); });
+}
+
 function cacheRows(rows) {
   if (!APP_CONFIG.OFFLINE_CACHE) return;
   try {
@@ -438,42 +462,37 @@ function loadCache() {
 function loadData() {
   if (state.loading) return;
   state.loading = true;
-  var tries = 0;
   var line = $("countLine");
   if (line && !state.loaded) line.textContent = "Cargando…";
 
-  function attempt(err) {
-    tries++;
-    if (tries < 2) {
-      loadViaJSONP(APP_CONFIG.SHEET_NAME, function (err2, result) {
-        if (!err2) { finalize(result); return; }
-        attempt(err2);
-      });
-      return;
-    }
-    loadViaExportCSV(function (err2, result) {
-      if (err2) {
-        var cache = loadCache();
-        if (cache) {
-          state.rows = cache.rows;
-          state.loaded = true;
-          afterLoad();
-        } else {
-          showNetError();
-        }
-        state.loading = false;
-        return;
-      }
-      finalize(result);
-    });
-  }
-
-  loadViaJSONP(APP_CONFIG.SHEET_NAME, function (err, result) {
+  // 1) Export crudo por gid (conserva telefonos con guiones/espacios).
+  // 2) gviz JSONP (fallback). 3) gviz CSV (fallback). 4) copia local.
+  loadViaRawCSV(function (err, result) {
     if (!err) {
       finalize(result);
       return;
     }
-    attempt(err);
+    loadViaJSONP(APP_CONFIG.SHEET_NAME, function (err2, result2) {
+      if (!err2) {
+        finalize(result2);
+        return;
+      }
+      loadViaExportCSV(function (err3, result3) {
+        if (err3) {
+          var cache = loadCache();
+          if (cache) {
+            state.rows = cache.rows;
+            state.loaded = true;
+            afterLoad();
+          } else {
+            showNetError();
+          }
+          state.loading = false;
+          return;
+        }
+        finalize(result3);
+      });
+    });
   });
 
   function finalize(result) {

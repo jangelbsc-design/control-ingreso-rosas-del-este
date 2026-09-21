@@ -57,6 +57,7 @@ Todo se configura en **`js/config.js`**:
 |---|---|---|
 | `SPREADSHEET_ID` | El ID que está en el enlace de tu hoja (`.../d/<AQUÍ>/edit`) | `1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO` |
 | `SHEET_NAME` | Nombre exacto de la pestaña con la base de vecinos | `PROPIETARIOS` |
+| `SHEET_GID` | Número `gid` de esa pestaña (aparece en la URL al abrirla: `.../edit#gid=<AQUÍ>`). La app lo usa para descargar la hoja **en crudo** y así **no perder** los teléfonos con guiones/espacios | `1653009094` |
 | `SHEET_USERS` | Pestaña con los usuarios y contraseñas del login | `Usuarios` |
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado, ahora recarga sola cada 5 min) | `5` |
@@ -185,7 +186,7 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 |---|---|
 | "Sin datos · Verifica la hoja" en rojo | La hoja no está compartida como *cualquiera con el enlace → Lector*, o cambió el `SPREADSHEET_ID`/`SHEET_NAME` en `config.js`. |
 | La app abre con **0 vecinos** | Esto pasaba cuando la app no pedía encabezados a Google. Ya está corregido; si vuelve, cierra la app y ábrela 1–2 veces (actualiza la copia guardada). |
-| Un teléfono **no aparece** aunque esté en la hoja | La columna CELULAR está como *número*: ponla en **Texto sin formato** (ver punto 3.5) para que no borre las casillas con guiones. |
+| Un teléfono **no aparece** aunque esté en la hoja | El celular está escrito con guiones/espacios (ej. `71616102 - 75015599`) y la columna CELULAR está como *número*: Google **borra** esas casillas al exportar. Ya está corregido en la app (v18 usa el export crudo por `SHEET_GID`, que conserva todo). Aun así, conviene dejar la columna CELULAR en **Texto sin formato** (ver punto 3.5) para evitar que Google las borre. Si un teléfono sigue sin salir, **cierra la app y ábrela 1–2 veces con internet** para que baje la versión nueva. |
 | Encontrar datos de otra pestaña | El `SHEET_NAME` en `config.js` no coincide con la pestaña correcta. |
 | No aparece la placa | La columna `PLACA` está vacía en la hoja para ese vecino. La ficha muestra "Sin placa registrada". |
 | Búsqueda con tildes no encuentra | No importa: la app ignora mayúsculas, tildes y guiones. |
