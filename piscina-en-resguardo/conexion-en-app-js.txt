@@ -1,0 +1,34 @@
+/* =====================================================================
+ * app.js — las 2 líneas de CONEXIÓN
+ * =====================================================================
+ * El módulo de manillas va entero al FINAL de js/app.js (es un bloque
+ * independiente; se pega después de `document.addEventListener
+ * ("DOMContentLoaded", init);`). Además hay que agregar estas DOS
+ * líneas dentro del código que ya existe:
+ *
+ * ---------------------------------------------------------------------
+ * (1) En onBackPressed()  (~linea 37 del app.js original)
+ *     Para que el botón atrás del teléfono cierre la hoja de manillas.
+ *     Va justo DESPUÉS de la línea de cobranzaOverlay.
+ * ---------------------------------------------------------------------
+ *
+ *   if (!$("loginOverlay").hidden) { closeLogin(); return; }
+ *   if (!$("cobranzaOverlay").hidden) { closeCobranza(); return; }
+ *   if (!$("manSheet").hidden) { cerrarManHoja(); return; }      <== AGREGAR
+ *   if (!$("phoneSheet").hidden) { closePhoneSheet(); return; }
+ *
+ * ---------------------------------------------------------------------
+ * (2) En openDetail()  (~linea 797 del app.js original)
+ *     Para que el aviso aparezca en la ficha del vecino.
+ *     Va justo ANTES de "var locWrap = $(dtMapWrap)".
+ * ---------------------------------------------------------------------
+ *
+ *   pintarManillas(r);                                          <== AGREGAR
+ *   var locWrap = $("dtMapWrap");
+ *
+ * ---------------------------------------------------------------------
+ * OJO: si no se agrega la (2), la ficha abre igual y no se ve nada.
+ *      Si se agrega y algo falla, pintarManillas() tiene un
+ *      try/catch que esconde el aviso y la ficha abre normal.
+ * ---------------------------------------------------------------------
+ */

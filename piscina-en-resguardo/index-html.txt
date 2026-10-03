@@ -1,0 +1,36 @@
+/* =====================================================================
+ * index.html — los 2 agregados de las manillas
+ * =====================================================================
+ * Para retomarlo: pegar estos dos bloques en su sitio. Nada más de
+ * index.html se toca.
+ *
+ * ---------------------------------------------------------------------
+ * (1) El aviso dentro de la ficha del vecino.
+ * Va como PRIMER hijo de <div class="detail-content">, que en la app
+ * original empieza en la línea ~265. Justo antes de dtMapWrap.
+ * ---------------------------------------------------------------------
+ */
+
+        <div id="dtManillas" class="dt-manillas" hidden></div>
+
+
+ * ---------------------------------------------------------------------
+ * (2) La hoja del recibo / mensaje de manillas.
+ * Va DESPUÉS de #cobranzaOverlay y ANTES de #phoneSheet.
+ * ---------------------------------------------------------------------
+ */
+
+  <!-- ============ HOJA: RECIBO DE MANILLA DE PISCINA ============ -->
+  <div id="manSheet" class="overlay sheet-overlay" hidden>
+    <div class="sheet" role="dialog" aria-label="Recibo de manilla">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title" id="manTitle">Manilla de piscina</div>
+      <div class="sheet-number sheet-number-sm" id="manRecip">—</div>
+      <textarea id="manMsg" class="cobranza-msg" rows="12" spellcheck="false"></textarea>
+      <div class="sheet-grid">
+        <button type="button" id="manWa" class="btn btn-green btn-lg">WhatsApp</button>
+        <button type="button" id="manCopy" class="btn btn-dark btn-lg">Copiar</button>
+      </div>
+      <button type="button" id="manCancel" class="btn btn-ghost w-full">Cerrar</button>
+    </div>
+  </div>

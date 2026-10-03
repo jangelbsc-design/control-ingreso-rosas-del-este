@@ -1,0 +1,502 @@
+/* =====================================================================
+ * MANILLAS DE LA PISCINA
+ * ---------------------------------------------------------------------
+ * Bloque independiente. No modifica nada de lo que ya funciona: solo
+ * lee `state.rows` y guarda sus propios datos en el navegador.
+ *
+ * Reglas (ver PISCINA en js/config.js):
+ *   · Cada propietario tiene MANILLAS_BASE manillas y las conserva.
+ *   · Las manillas extra cuestan PRECIO_EXTRA y se devuelven al
+ *     cierre del día.
+ *   · Los vecinos en mora no acceden a la piscina; si tienen manillas
+ *     deben devolverlas a administración.
+ *
+ * "tiene" es el número de manillas que el vecino tiene EN LA MANO.
+ * Se guarda como valor absoluto en cada movimiento, así se puede
+ * corregir a mano en cualquier momento (pisAddSaldo).
+ * ===================================================================== */
+var MAN_KEY = "rde_manillas_v1";
+
+/* Ajustes de la piscina, con valores por si falta la config. */
+function manCfg() {
+  var c = (APP_CONFIG && APP_CONFIG.PISCINA) || {};
+  return {
+    base: Number(c.MANILLAS_BASE) || 5,
+    precio: Number(c.PRECIO_EXTRA) || 20,
+    moneda: c.MONEDA || "Bs",
+    soloVigentes: c.SOLO_VIGENTES !== false
+  };
+}
+
+/* ---------- Almacenamiento local ---------- */
+function getManillas() {
+  try {
+    var raw = JSON.parse(localStorage.getItem(MAN_KEY) || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch (er) {
+    return [];
+  }
+}
+
+function setManillas(list) {
+  try {
+    // tope para no llenar el almacenamiento del navegador
+    localStorage.setItem(MAN_KEY, JSON.stringify(list.slice(0, 800)));
+  } catch (er) { /* sin espacio: se sigue igual */ }
+}
+
+function manEtiqueta(n) {
+  return n + " manilla" + (n === 1 ? "" : "s");
+}
+
+/* ---------- Cálculo del estado de cada vecino ---------- */
+/* Recorre los movimientos del más ANTIGUO al más reciente para que
+   el último sea el que manda. Varios movimientos pueden caer en el
+   mismo milisegundo, así que no se puede ordenar por ts. */
+function manSaldos() {
+  var cfg = manCfg();
+  var hoy = sameDateKey(Date.now());
+  var mapa = {};
+  var lista = getManillas();
+
+  for (var i = lista.length - 1; i >= 0; i--) {
+    var e = lista[i];
+    var k = normalizeText(e.owner);
+    if (!k) continue;
+    var s = mapa[k];
+    if (!s) {
+      var fila = manRowByOwner(k);
+      var mora = !!(fila && fila.status === "mora");
+      s = mapa[k] = {
+        key: k,
+        block: e.block || "",
+        owner: e.owner || "",
+        /* Punto de partida, según lo que la administración da por hecho:
+           - VIGENTE: tiene sus 5, es lo normal.
+           - MORA: se asume que NO tiene manillas. Si en realidad sí
+             las tiene, el administrador se las asigna a mano con el
+             + y ese conteo queda guardado (es un movimiento más). */
+        tiene: mora ? 0 : cfg.base,
+        mora: mora,
+        tomadas: 0,
+        devueltas: 0,
+        cobrado: 0,
+        ultimo: e.time || ""
+      };
+    }
+    /* Todos los eventos respetan el saldo explícito que deja la app.
+       Sumar la cantidad solo es el respaldo cuando no viene. Así el
+       contador SIEMPRE termina valiendo lo que dice el último
+       movimiento, que es lo que administración registró. */
+    var q = e.qty || 0;
+    if (e.event === "TOMA") {
+      s.tiene = typeof e.saldo === "number"
+        ? Math.max(0, e.saldo)
+        : s.tiene + q;
+      s.tomadas += q;
+      s.cobrado += e.amount || 0;
+    } else if (e.event === "DEVOLUCION") {
+      s.tiene = typeof e.saldo === "number"
+        ? Math.max(0, e.saldo)
+        : Math.max(0, s.tiene - q);
+      s.devueltas += q;
+    } else if (e.event === "AJUSTE") {
+      if (typeof e.saldo === "number") s.tiene = Math.max(0, e.saldo);
+    }
+    // "CIERRE" no cuenta: es el sello de cierre, no un vecino
+    if (e.dateLabel === hoy) s.ultimo = e.time || s.ultimo;
+  }
+
+  /* Lo que se MUESTRA sale siempre del estado actual, nunca de los
+     contadores del día. tomar 3 y devolver 2 deja 1 extra: se muestra
+     1 extra, no "tomó 3 y devolvió 2", que ya no describe nada. */
+  /* La base es siempre la misma (5). Lo que decide la mora no es cuántas
+     tiene, sino si esas 5 son suyas o son deuda: por eso "extra" solo
+     existe para el vigente, y un mora no tiene ni extras ni faltantes. */
+  Object.keys(mapa).forEach(function (k) {
+    var s = mapa[k];
+    s.base = cfg.base;
+    s.extra = s.mora ? 0 : Math.max(0, s.tiene - s.base);
+    s.faltan = s.mora ? 0 : Math.max(0, s.base - s.tiene);
+    s.debe = s.extra * cfg.precio;
+  });
+  return mapa;
+}
+
+/* ---------- Textos ---------- */
+/* Cobro de las manillas extra. El monto NO va fijo: sale de
+   cuántas tomó realmente, y se muestra el precio por manilla
+   para que quede claro cómo se calcula el total. */
+function manTextoCobro(r, qty, amount) {
+  var cfg = manCfg();
+  var nombre = String(r.ownerName || "").trim() || "vecino";
+  var manzano = r.block ? " (" + formatBlockLabel(r.block) + ")" : "";
+  return greetingNow() + ", " + nombre + ", vecino de Rosas del Este" + manzano + ".\n\n" +
+    "Se le entregan " + manEtiqueta(qty) + " ADICIONAL" + (qty === 1 ? "" : "ES") +
+    " para el uso de la piscina.\n" +
+    "El valor es de " + cfg.moneda + " " + cfg.precio + " por manilla, total " +
+    cfg.moneda + " " + amount + ".\n\n" +
+    "Las manillas adicionales son de uso diario: deben devolverlas en administración " +
+    "al cierre del día. Las " + cfg.base + " manillas que le corresponden se conservan con usted.\n\n" +
+    "¡Gracias por su atención!\n\n" +
+    "Administración Rosas del Este Zona Sur";
+}
+
+/* Aviso para el vecino que está en mora: no accede a la piscina y
+   debe devolver TODO lo que tiene en su poder (mientras esté
+   vigente solo devolvía las extra; en mora pierde también las suyas). */
+function manTextoMora(r, tiene) {
+  var nombre = String(r.ownerName || "").trim() || "vecino";
+  var manzano = r.block ? " (" + formatBlockLabel(r.block) + ")" : "";
+  var out = greetingNow() + ", " + nombre + ", vecino de Rosas del Este" + manzano + ".\n\n" +
+    "Le informamos que su cuenta se encuentra EN MORA, por lo que no puede acceder a la piscina.\n";
+
+  if (tiene > 0) {
+    out += "\nTiene " + manEtiqueta(tiene) + " en su poder. Mientras siga en mora debe devolverlas " +
+      "todas en administración.\n\n" +
+      "Puede hacer la entrega en administración en horario de atención.\n";
+  }
+
+  return out + "\n¡Gracias por su atención!\n\n" +
+    "Administración Rosas del Este Zona Sur";
+}
+
+/* ---------- Hoja del recibo ---------- */
+var manSheetRow = null;
+
+function abrirManHoja(titulo, r, texto) {
+  manSheetRow = r;
+  $("manTitle").textContent = titulo;
+  var recip = [];
+  if (r) {
+    if (r.block) recip.push(formatBlockLabel(r.block));
+    if (r.ownerName) recip.push(r.ownerName);
+  }
+  $("manRecip").textContent = recip.join(" · ") || "—";
+  $("manMsg").value = texto;
+  $("manSheet").hidden = false;
+  document.body.classList.add("locked");   // igual que las otras hojas
+  $("manWa").hidden = !(r && waDigits(r, 0));
+  vib(8);
+}
+
+function cerrarManHoja() {
+  $("manSheet").hidden = true;
+  // la ficha sigue abierta detrás: no se saca el bloqueo todavía
+  if (state.selected == null || $("detailOverlay").hidden) {
+    document.body.classList.remove("locked");
+  }
+  manSheetRow = null;
+}
+
+function copiarMan() {
+  var msg = $("manMsg").value;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(msg).then(function () { toast("Recibo copiado"); });
+  } else {
+    toast("No se pudo copiar en este navegador");
+  }
+}
+
+function enviarManWA() {
+  var r = manSheetRow;
+  var dial = waDigits(r, 0);
+  if (!dial) { toast("Este vecino no tiene número de WhatsApp"); return; }
+  window.open("https://wa.me/" + dial + "?text=" + encodeURIComponent($("manMsg").value), "_blank");
+}
+
+/* ---------- Acciones sobre el contador ---------- */
+/* Solo el administrador. Cada acción deja el saldo explícito en el
+   movimiento, para que se pueda corregir a mano después. */
+function manAccion(act, r) {
+  if (!isAdmin()) { toast("Solo el administrador puede modificar manillas"); return; }
+  var cfg = manCfg();
+  var a = manSaldo(r);
+  var mora = r.status === "mora";
+
+  /* El + solo cobra cuando se pasa de las 5 que le tocan.
+     Un vecino que tiene 3 y llega a 5 está completando las suyas:
+     no se le cobra nada. La 6ta y siguientes sí son extra.
+     En un moroso NUNCA se cobra: el + es solo la forma de
+     corregir un − apretado por error. */
+  if (act === "mas") {
+    var queda = a.tiene + 1;
+    var esExtra = !mora && queda > cfg.base;
+    manAdd(r, "TOMA", 1, esExtra ? cfg.precio : 0, queda);
+    pintarManillas(r);
+    toast(mora
+      ? "Corrección registrada · queda con " + manEtiqueta(queda)
+      : esExtra
+        ? "Manilla extra entregada · " + cfg.moneda + " " + cfg.precio
+        : "Completó sus " + cfg.base + " manillas · sin costo");
+    vib(8);
+    return;
+  }
+
+  if (act === "menos") {
+    if (a.tiene <= 0) return;
+    manAdd(r, "DEVOLUCION", 1, 0, a.tiene - 1);
+    pintarManillas(r);
+    toast("Devolvió 1 · queda con " + manEtiqueta(Math.max(0, a.tiene - 1)));
+    vib(6);
+    return;
+  }
+
+  if (act === "todas") {
+    /* Las 5 que le corresponden NO se devuelven: se las queda.
+       Un vigente devuelve solo las extra; un en mora devuelve
+       todo, porque no debería conservar ninguna. */
+    var n = mora ? a.tiene : (a.extra || 0);
+    if (n <= 0) return;
+    manAdd(r, "DEVOLUCION", n, 0, a.tiene - n);
+    pintarManillas(r);
+    toast("Devolvió " + manEtiqueta(n) + " a administración · queda con " + manEtiqueta(a.tiene - n));
+    vib(10);
+    return;
+  }
+
+  if (act === "base") {
+    if (mora) { toast("Un vecino en mora no puede tener manillas"); return; }
+    manAjustar(r, cfg.base);
+    pintarManillas(r);
+    toast("Restauradas sus " + cfg.base + " manillas");
+    return;
+  }
+
+  /* Un solo botón "cobrar": lo que se cobra depende del contexto.
+     Se cobra por lo que tiene en la mano AHORA, no por todo lo que
+     tomó hoy: si ya devolvió una, esa no se cobra otra vez. */
+  if (act === "cobrar") {
+    if (mora) {
+      abrirManHoja("Manillas · vecino en mora", r, manTextoMora(r, a.tiene));
+      return;
+    }
+    var ex = a.extra || 0;
+    if (ex <= 0) { toast("No tiene manillas extra pendientes"); return; }
+    abrirManHoja("Cobro de manillas extras", r, manTextoCobro(r, ex, ex * cfg.precio));
+    return;
+  }
+}
+
+/* ---------- El aviso dentro de la ficha del vecino ---------- */
+/* Solo lectura. Va envuelto en try/catch: si algo falla, la ficha
+   abre igual y el aviso simplemente no aparece. */
+function pintarManillas(r) {
+  var box = $("dtManillas");
+  if (!box || !r) return;
+  box.hidden = true;
+  box.innerHTML = "";
+  try {
+    var cfg = manCfg();
+    var a = manSaldo(r);
+    var mora = a.mora === true || r.status === "mora";
+    var tiene = a.tiene || 0;
+    var extra = mora ? 0 : Math.max(0, tiene - cfg.base);
+    var faltan = mora ? 0 : Math.max(0, cfg.base - tiene);
+
+    var clase, titulo, sub;
+
+    if (mora && tiene > 0) {
+      clase = "man-bad";
+      titulo = "Debe devolver " + manEtiqueta(tiene);
+      sub = "En mora no puede acceder a la piscina. Que las entregue en administración.";
+    } else if (mora) {
+      clase = "man-bad";
+      titulo = "Sin acceso a piscina";
+      sub = "No tiene manillas. El acceso a la piscina está suspendido por mora.";
+    } else if (tiene === 0) {
+      clase = "man-warn";
+      titulo = "No tiene manillas";
+      sub = "Le faltan las " + cfg.base + " que le corresponden.";
+    } else if (extra > 0) {
+      clase = "man-warn";
+      titulo = "Tiene " + manEtiqueta(tiene) + " · " + extra +
+        (extra === 1 ? " extra por devolver" : " extras por devolver");
+      sub = (extra === 1
+        ? "La manilla extra se devuelve al cierre del día."
+        : "Las " + extra + " extras se devuelven al cierre del día.") +
+        " Total a cobrar: " + cfg.moneda + " " + (extra * cfg.precio) + ".";
+    } else if (faltan > 0) {
+      clase = "man-warn";
+      titulo = "Tiene " + manEtiqueta(tiene);
+      sub = "Le " + (faltan === 1 ? "falta " : "faltan ") + faltan +
+        " de las " + cfg.base + " que le corresponden.";
+    } else {
+      clase = "man-ok";
+      titulo = "Tiene sus " + cfg.base + " manillas";
+      sub = "Puede acceder a la piscina con ellas.";
+    }
+
+    box.className = "dt-manillas " + clase;
+    box.innerHTML =
+      '<svg class="man-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+      '<path d="M7 7h10v10H7z" opacity=".25"/>' +
+      '<path d="M9 4h6v2H9zM9 18h6v2H9zM4 9h2v6H4zM18 9h2v6h-2z"/></svg>' +
+      '<div class="man-texto">' +
+      '<div class="man-titulo">' + escapeHTML(titulo) + "</div>" +
+      '<div class="man-sub">' + escapeHTML(sub) + "</div>" +
+      (isAdmin() ? manControles(r, a, cfg, mora, extra, faltan) : "") +
+      "</div>";
+    box.hidden = false;
+  } catch (er) {
+    box.hidden = true;   // la ficha abre normal
+  }
+}
+
+/* El contador para quitar o agregar. Solo se pinta si el usuario es
+   administrador; los demás solo leen el aviso. */
+function manControles(r, a, cfg, mora, extra, faltan) {
+  var sinManillas = a.tiene <= 0;
+
+  /* El + se dibuja siempre, también en mora. Sirve para corregir: si
+     se aprieta el − por error, sin el + no hay forma de arreglarlo.
+     En un moroso el + NUNCA cobra, soloCorrige el número. */
+  var ctrl = '<div class="man-ctrl">' +
+    '<span class="man-ctrl-lbl">Tiene</span>' +
+    '<div class="step">' +
+      '<button type="button" class="step-btn" data-man="menos"' +
+        (sinManillas ? " disabled" : "") +
+        ' aria-label="Registrar que devolvió una manilla">−</button>' +
+      '<b class="step-val">' + a.tiene + "</b>" +
+      '<button type="button" class="step-btn" data-man="mas"' +
+        ' aria-label="' + (mora ? "Corregir: registrar una manilla más" : "Tomar una manilla extra") + '">+</button>' +
+    "</div>" +
+    '<span class="man-hint">' +
+      (mora ? "solo para corregir" : "+1 = " + escapeHTML(cfg.moneda) + " " + cfg.precio) +
+    "</span>" +
+    "</div>";
+
+  /* Botones. El contador solo suma o resta; cobrar va aparte y es
+     UN solo botón que cambia de texto según el contexto del
+     vecino, porque lo que hay que cobrar no siempre es lo mismo:
+     a un vigente las manillas extra, a un mora la devolución. */
+  var acts = "";
+  if (mora && a.tiene > 0) {
+    acts += '<button type="button" class="btn btn-outline-dark btn-sm" data-man="todas">Devolver todas</button>';
+  } else if (extra > 0) {
+    acts += '<button type="button" class="btn btn-outline-dark btn-sm" data-man="todas">Devolver las ' +
+      extra + " extra" + (extra === 1 ? "" : "s") + "</button>";
+  }
+  if (!mora && faltan > 0) {
+    acts += '<button type="button" class="btn btn-outline-dark btn-sm" data-man="base">Restaurar ' +
+      cfg.base + "</button>";
+  }
+  if (mora) {
+    acts += '<button type="button" class="btn btn-green btn-sm" data-man="cobrar">Cobrar manillas</button>';
+  } else if (extra > 0) {
+    acts += '<button type="button" class="btn btn-green btn-sm" data-man="cobrar">Cobrar manillas extras</button>';
+  }
+
+  return ctrl + (acts ? '<div class="man-acts">' + acts + "</div>" : "");
+}
+
+/* Busca la fila real del vecino por su nombre (o por cualquiera de los
+   copropietarios de la casilla). Se usa solo para saber si está en mora. */
+function manRowByOwner(key) {
+  var hit = null;
+  if (!key || !state.rows) return null;
+  for (var i = 0; i < state.rows.length; i++) {
+    var r = state.rows[i];
+    if (normalizeText(r.ownerName) === key) { hit = r; break; }
+    if (!hit && (r.ownerParts || []).some(function (p) { return normalizeText(p) === key; })) hit = r;
+  }
+  return hit;
+}
+
+/* Estado de un vecino concreto. Si no tiene movimientos, arranca con
+   las manillas que le corresponden; si está en mora, con 0. */
+function manSaldo(r) {
+  var cfg = manCfg();
+  var a = manSaldos()[normalizeText(r.ownerName)];
+  if (a) return a;
+  var mora = r.status === "mora";
+  return {
+    key: normalizeText(r.ownerName),
+    block: r.block || "",
+    owner: r.ownerName || "",
+    mora: mora,
+    base: cfg.base,
+    /* Sin movimientos registrados: un vigente tiene sus 5, un mora se
+       asume en cero hasta que el administrador le asigne las que tenga. */
+    tiene: mora ? 0 : cfg.base,
+    extra: 0,
+    faltan: 0,
+    debe: 0,
+    tomadas: 0,
+    devueltas: 0,
+    cobrado: 0,
+    ultimo: ""
+  };
+}
+
+/* ---------- Registrar movimientos ---------- */
+/* saldo: cuántas manillas quedan en la mano. Si no se pasa, se calcula
+   sumando o restando la cantidad. */
+function manAdd(r, evento, qty, amount, saldo) {
+  var st = nowStamp();
+  var cfg = manCfg();
+  var ses = getSession();
+  var previo = manSaldo(r).tiene;
+  var nuevo = typeof saldo === "number"
+    ? Math.max(0, saldo)
+    : (evento === "TOMA" ? previo + qty : Math.max(0, previo - qty));
+
+  var e = {
+    id: st.ts.toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36),
+    ts: st.ts,
+    time: st.time,
+    dateLabel: st.dateLabel,
+    block: r.block || "",
+    owner: r.ownerName || "",
+    event: evento,
+    qty: qty || 0,
+    amount: amount || 0,
+    saldo: nuevo,
+    user: (ses && ses.user) || "",
+    precioUnit: cfg.precio
+  };
+
+  var lista = getManillas();
+  lista.unshift(e);
+  setManillas(lista);
+  return e;
+}
+
+/* Corrección manual del conteo (por si se aparta la cuenta). */
+function manAjustar(r, saldo) {
+  return manAdd(r, "AJUSTE", 0, 0, saldo);
+}
+
+/* ---------- Enlaces de la interfaz ----------
+   Van al final del archivo para no tocar init() ni ninguna otra
+   función que ya funciona. El aviso se repinta con innerHTML, así
+   que se escuchan los clics por delegación sobre el contenedor. */
+function initManillas() {
+  var box = $("dtManillas");
+  if (box) {
+    box.addEventListener("click", function (ev) {
+      var b = ev.target.closest ? ev.target.closest("[data-man]") : null;
+      if (!b || b.disabled) return;
+      // el aviso se pinta para state.selected al abrir la ficha
+      manAccion(b.getAttribute("data-man"), state.selected);
+    });
+  }
+
+  var hoja = $("manSheet");
+  if (hoja) {
+    hoja.addEventListener("click", function (ev) {
+      if (ev.target === hoja) cerrarManHoja();
+    });
+  }
+  $("manCancel").addEventListener("click", cerrarManHoja);
+  $("manCopy").addEventListener("click", copiarMan);
+  $("manWa").addEventListener("click", enviarManWA);
+
+  // el botón atrás del teléfono cierra la hoja
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && !hoja.hidden) cerrarManHoja();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initManillas);

@@ -9,5 +9,8 @@ Thumbs.db
 # Logs
 *.log
 
+# Capturas y volcados de las pruebas del navegador (herramienta interna)
+.playwright-mcp/
+
 # Archivo accidental vacío
 nuevo

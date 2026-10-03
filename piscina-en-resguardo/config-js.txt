@@ -1,0 +1,13 @@
+/* =====================================================================
+ * PISCINA — configuración
+ * ---------------------------------------------------------------------
+ * Va dentro de APP_CONFIG, antes del }; final.
+ * (La app ya está en APP_VERSION "18"; si se retoma esto, subir a "19"
+ *  y cambiar las dos referencias ?v= de index.html y el CACHE de sw.js)
+ * ===================================================================== */
+  PISCINA: {
+    MANILLAS_BASE: 5,
+    PRECIO_EXTRA: 20,
+    MONEDA: "Bs",
+    SOLO_VIGENTES: true   // los de mora no pueden tomar manillas
+  }
