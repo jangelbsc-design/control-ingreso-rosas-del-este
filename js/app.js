@@ -502,6 +502,9 @@ function loadData() {
     cacheRows(rows);
     hideNetError();
     afterLoad();
+    /* Avisa de CANCELADO: se descarga aparte y sin bloquear nada.
+       Si esa hoja falla, la app queda igual, solo sin el aviso. */
+    cargarCancelado(rows);
     state.loading = false;
   }
 }
@@ -701,6 +704,7 @@ function openDetail(r) {
       : r.statusRaw;
   banner.appendChild(bTitle);
   banner.appendChild(bSub);
+  pintarCancelado(r);
 
   $("dtBlock").textContent = formatBlockLabel(r.block) || "—";
 
@@ -1837,3 +1841,157 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
+/* ================================================================
+   AVISO DE "CANCELADO" — la última cuota que pagó el vecino
+   ================================================================
+   La columna CANCELADO no está en la pestaña de los vecinos
+   (PROPIETARIOS) sino en otra pestaña del mismo documento. Por eso
+   aquí se descarga APARTE, una sola vez, y se empareja por manzano.
+
+   Regla de oro de este bloque: si la descarga falla, la app sigue
+   funcionando exactamente igual que antes, solo que sin el aviso.
+   Nunca debe romper la carga de los vecinos. */
+
+var CANCELADO_KEY = "rde_cancelado_v1";
+
+/* Un manzano se compara por sus NÚMEROS, no por el texto. Así
+   "M21 - 20", "m21-20" y "M21 - 20 " se reconocen como el mismo
+   manzano, aunque estén escritos distinto en cada pestaña. */
+function claveManzano(txt) {
+  var nums = String(txt || "").match(/\d+/g);
+  return nums ? nums.join("-") : "";
+}
+
+/* Descarga la pestaña del aviso y guarda un mapa
+   manzano -> texto de CANCELADO (literal, tal cual está en la hoja). */
+function cargarCancelado(rows) {
+  var sheet = APP_CONFIG.SHEET_CANCELADO;
+  if (!sheet || !rows || !rows.length) return;
+
+  loadViaJSONP(sheet, function (err, result) {
+    if (err || !result) return;           // falla silenciosamente
+    var mapa = mapaCancelado(result.cols, result.rows);
+    if (!mapa) return;
+    var i = 0;
+    for (var k = 0; k < rows.length; k++) {
+      var v = mapa[claveManzano(rows[k].block)];
+      rows[k].cancelado = v || "";
+      if (v) i++;
+    }
+    try { localStorage.setItem(CANCELADO_KEY, JSON.stringify(mapa)); } catch (e) { /* sin espacio */ }
+    if (i && state.selected) pintarCancelado(state.selected);
+  });
+}
+
+/* Convierte las filas de la hoja en { "21-20": "Agosto // 25", ... }
+
+   OJO: según cómo responde Google, los encabezados pueden venir en
+   `cols` (con los títulos) o como la PRIMERA fila dentro de `rows`
+   (y ahí `cols` trae letras A, B, C...). Por eso los encabezados se
+   buscan en los dos sitios: así funciona aunque Google cambie. */
+function mapaCancelado(cols, records) {
+  var wantTxt = String(APP_CONFIG.COL_CANCELADO || "CANCELADO").trim().toUpperCase();
+  var wantMz = String(APP_CONFIG.COL_CANCELADO_MZ || "MAZANO").trim().toUpperCase();
+
+  var head = null, start = 0, i;
+  for (i = 0; i < cols.length; i++) {
+    if (String(cols[i] == null ? "" : cols[i]).trim().toUpperCase() === wantTxt) { head = cols; break; }
+  }
+  if (!head) {
+    var first = records[0] || [];
+    for (i = 0; i < first.length; i++) {
+      if (String(first[i] == null ? "" : first[i]).trim().toUpperCase() === wantTxt) { head = first; start = 1; break; }
+    }
+  }
+  if (!head) return null;
+
+  var colTxt = -1, colMz = -1, colAnio = -1;
+  var wantAnio = String(APP_CONFIG.COL_CANCELADO_ANIO || "").trim().toUpperCase();
+  for (i = 0; i < head.length; i++) {
+    var lbl = String(head[i] == null ? "" : head[i]).trim().toUpperCase();
+    if (lbl === wantTxt) colTxt = i;
+    else if (lbl === wantMz) colMz = i;
+    else if (wantAnio && lbl === wantAnio) colAnio = i;
+  }
+  if (colTxt < 0) return null;
+
+  /* En la hoja el año está en la columna de al lado de CANCELADO,
+     pero esa columna NO tiene título (viene vacía), así que no se
+     puede buscar por nombre. Si no aparece por título, se toma la
+     de al lado. Solo se acepta si el valor parece un año. */
+  if (colAnio < 0 && colTxt + 1 < records.length) colAnio = colTxt + 1;
+
+  var mapa = {};
+  for (i = start; i < records.length; i++) {
+    var rec = records[i] || [];
+    var mz = colMz >= 0 ? claveManzano(rec[colMz]) : "";
+    var txt = String(rec[colTxt] == null ? "" : rec[colTxt]).trim();
+    if (mz && txt) {
+      /* La columna CANCELADO trae el mes y el año va en la de al
+         lado (GESTIÓN). Se juntan solo si el texto NO trae ya un
+         año, para no escribir "Agosto // 25 2025". */
+      var anio = colAnio >= 0 ? String(rec[colAnio] == null ? "" : rec[colAnio]).trim() : "";
+      if (!/^\d{4}$/.test(anio)) anio = "";   // solo si de verdad es un año
+      if (anio && !textoYaTieneAnio(txt)) txt += " " + anio;
+      mapa[mz] = txt;
+    }
+  }
+  return mapa;
+}
+
+/* ¿El texto ya trae un año? Completo ("No Pagó 2025") o abreviado
+   ("Agosto // 25"). En esos casos no se le agrega el de al lado. */
+function textoYaTieneAnio(txt) {
+  return /\d{4}/.test(txt) || /\/\/\s*\d/.test(txt);
+}
+
+/* Recupera el mapa guardado, para que al abrir una ficha sin
+   conexión el aviso siga pudiéndose pintar. */
+function cacheCancelado() {
+  try {
+    var m = JSON.parse(localStorage.getItem(CANCELADO_KEY) || "null");
+    return m && typeof m === "object" ? m : null;
+  } catch (e) { return null; }
+}
+
+/* Pinta el aviso en la esquina superior derecha de la ficha, al
+   lado opuesto del letrero de estado (ACCESO AUTORIZADO / EN MORA).
+   El texto va LITERAL: se muestra exactamente lo que dice la
+   columna, sin corregirlo ni agregarle nada. */
+function pintarCancelado(r) {
+  var banner = $("dtBanner");
+  if (!banner) return;
+
+  var vieja = banner.querySelector(".dt-cancelado");
+  if (vieja) vieja.parentNode.removeChild(vieja);
+  var quitarClase = function () { banner.classList.remove("con-aviso"); };
+  quitarClase();
+
+  var txt = "";
+  if (r) {
+    txt = r.cancelado || "";
+    if (!txt) {
+      var mapa = cacheCancelado();
+      if (mapa) txt = mapa[claveManzano(r.block)] || "";
+    }
+  }
+  if (!txt) return;
+
+  var badge = document.createElement("div");
+  badge.className = "dt-cancelado";
+  badge.title = "Última cuota pagada (columna CANCELADO)";
+
+  var cap = document.createElement("span");
+  cap.className = "dt-cancelado-cap";
+  cap.textContent = "Cancelado";
+  badge.appendChild(cap);
+
+  var val = document.createElement("strong");
+  val.className = "dt-cancelado-val";
+  val.textContent = txt;
+  badge.appendChild(val);
+
+  banner.appendChild(badge);
+  banner.classList.add("con-aviso");
+}

@@ -65,10 +65,31 @@ var APP_CONFIG = {
 
   /* Versión visible de la app (ajústala cada vez que cambies algo).
      Sirve para comprobar de qué versión está cada teléfono. */
-  APP_VERSION: "18",
+  APP_VERSION: "19",
 
   /* Imagen del QR de pago que se adjunta a los recordatorios
      (cobranza para morosos y recordatorio para vigentes).
      Guarda tu archivo en esa ruta, dentro de la carpeta de la app. */
-  QR_IMAGE: "imágenes/QR pago expensas.jpeg"
+  QR_IMAGE: "imágenes/QR pago expensas.jpeg",
+
+  /* ---------------------------------------------------------
+     AVISO DE "CANCELADO" (última cuota pagada)
+     ---------------------------------------------------------
+     La columna CANCELADO NO está en la pestaña de los vecinos
+     (PROPIETARIOS): vive en otra pestaña del mismo documento.
+     La app la descarga aparte y la muestra literal en la ficha.
+
+     SHEET_CANCELADO: pestaña donde está la columna.
+     COL_CANCELADO:  nombre exacto de la columna a mostrar.
+     COL_CANCELADO_MZ: columna con el manzano, para emparejar.
+     Dejar SHEET_CANCELADO en "" apaga el aviso por completo. */
+  SHEET_CANCELADO: "Hoja1",
+  COL_CANCELADO: "CANCELADO",
+  COL_CANCELADO_MZ: "MAZANO",
+
+  /* La columna CANCELADA trae el mes y el año va en la columna
+     de al lado (GESTIÓN). Se juntan solo cuando CANCELADO no
+     trae ya un año, para no escribir "Agosto // 25 2025".
+     Dejarlo en "" muestra el mes solo, como estaba antes. */
+  COL_CANCELADO_ANIO: "GESTIÓN"
 };
