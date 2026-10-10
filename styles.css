@@ -196,6 +196,23 @@ button { font-family: inherit; cursor: pointer; }
 .plates-row, .phones-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .phones-row { margin-top: 6px; }
 
+/* ---------------- Piscina (manillas) ----------------
+   Discreto: una sola línea al pie de la tarjeta, del mismo alto que
+   "Toca para ver ficha", así la tarjeta no crece. */
+.card-pool {
+  display: inline-flex; align-items: center; gap: 5px; margin-left: auto;
+  font-size: 11.5px; font-weight: 700; color: #6b7075; white-space: nowrap;
+}
+.card-pool-none { font-weight: 600; color: #9aa0a6; }
+.pool-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #c8ccd0; flex: none;
+}
+.pool-dot-red { background: var(--rojo); }
+.pool-dot-green { background: var(--verde); }
+.pool-dot-none { background: #c8ccd0; }
+.pool-dot-otro { background: #9aa0a6; }
+
 /* ---------------- Píldora de estado ---------------- */
 .pill {
   font-size: 11px; font-weight: 800; letter-spacing: .6px;
@@ -433,6 +450,25 @@ body.locked { overflow: hidden; }
   line-height: 1.25;
   word-break: break-word;
 }
+
+/* Piscina: una línea tenue debajo del letrero de estado. */
+.dt-pool {
+  padding: 7px 16px 0;
+  text-align: right;
+}
+.dt-pool-box {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--gris-texto);
+}
+.dt-pool-cap {
+  font-size: 10px; font-weight: 800; letter-spacing: .9px;
+  text-transform: uppercase; color: #9aa0a6;
+}
+.dt-pool-val {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-weight: 700; color: #3c4043;
+}
+.dt-pool-none { font-weight: 600; color: #9aa0a6; }
 
 .detail-content { padding: 4px 16px 20px; }
 .dt-section { margin-top: 16px; }

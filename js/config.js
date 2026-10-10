@@ -65,7 +65,7 @@ var APP_CONFIG = {
 
   /* Versión visible de la app (ajústala cada vez que cambies algo).
      Sirve para comprobar de qué versión está cada teléfono. */
-  APP_VERSION: "20",
+  APP_VERSION: "21",
 
   /* Imagen del QR de pago que se adjunta a los recordatorios
      (cobranza para morosos y recordatorio para vigentes).
@@ -91,5 +91,18 @@ var APP_CONFIG = {
      de al lado (GESTIÓN). Se juntan solo cuando CANCELADO no
      trae ya un año, para no escribir "Agosto // 25 2025".
      Dejarlo en "" muestra el mes solo, como estaba antes. */
-  COL_CANCELADO_ANIO: "GESTIÓN"
+  COL_CANCELADO_ANIO: "GESTIÓN",
+
+  /* ---------------------------------------------------------
+     PISCINA (manillas del vecino)
+     ---------------------------------------------------------
+     La columna PISCINA SÍ está en la pestaña de los vecinos
+     (PROPIETARIOS): dice cuántas manillas tiene cada uno
+     ("Sin Manillas", "5 Maniilas Rojas", "5 Manillas Verdes").
+     La app la reconoce sola y la muestra discreta: una línea al pie
+     de la tarjeta y una línea tenue en la ficha. El texto va literal.
+
+     MOSTRAR_PISCINA: false la apaga por completo (como si no
+     existiera la columna). */
+  MOSTRAR_PISCINA: true
 };

@@ -225,6 +225,7 @@ var COLUMN_RULES = [
   { key: "phone",    aliases: ["no celular", "no telefono", "celular", "telefono", "cel", "cel.", "numero de celular"], matchAny: ["celular", "telefono", "cel", "movil"] },
   { key: "plate",    aliases: ["placa", "placa vehiculo", "placa del vehiculo", "placa veh", "matricula", "patente"], matchAny: ["placa", "matric", "patente", "vehic", "veh"] },
   { key: "location",  aliases: ["ubicacion", "ubicacion gps", "gps", "coordenadas", "coordenada", "latitud", "longitud", "lat, long"], matchAny: ["ubicacion", "gps", "coordenad", "mapa"] },
+  { key: "pool",     aliases: ["piscina", "manillas", "manilla", "manillas piscina"], matchAny: ["piscina", "manilla"] },
   { key: "moroso",   aliases: ["moroso", "situacion pago", "estado pago"], matchAny: ["moroso"] },
   { key: "estado",   aliases: ["estado", "situacion" ], matchAny: [] }
 ];
@@ -265,13 +266,17 @@ function mapColumns(headers) {
     used = used.filter(function (i) { return i !== map.estado; });
   }
 
+  /* La columna PISCINA se muestra como chip propio (tarjeta y ficha),
+     así que no va también en "Detalles". */
+  if (map.pool != null) used.push(map.pool);
+
   headers.forEach(function (h, i) {
     if (used.indexOf(i) !== -1) return;
     if (i === statusIdx) return;
     extras.push({ label: collapseSpaces(h) || ("Columna " + (i + 1)), index: i });
   });
 
-  return { statusIdx: statusIdx, blockIdx: map.block, ownerIdx: map.owner, phoneIdx: map.phone, plateIdx: map.plate, locationIdx: map.location, extras: extras };
+  return { statusIdx: statusIdx, blockIdx: map.block, ownerIdx: map.owner, phoneIdx: map.phone, plateIdx: map.plate, locationIdx: map.location, poolIdx: map.pool, extras: extras };
 }
 
 /* ---------------- Procesado de registros ---------------- */
@@ -298,6 +303,11 @@ function buildRows(cols, records) {
     var block = collapseSpaces(blockRaw);
     if (!block && !ownerRaw) return;
 
+    /* Piscina: texto literal de la columna PISCINA (tal cual está en la
+       hoja). Si no hay columna o la casilla está vacía, queda "". */
+    var poolRaw = collapseSpaces(cell(m.poolIdx));
+    var pool = poolInfo(poolRaw);
+
     // Deduplicación básica (filas repetidas en la hoja)
     var key = normalizeText(block) + "|" + normalizeText(ownerRaw);
     if (seen[key] && seen[key].found) return;
@@ -319,6 +329,9 @@ function buildRows(cols, records) {
       phonesDial: phones.map(function (p) { return toDialNumber(p, cc); }),
       plates: plates,
       location: location,
+      poolRaw: poolRaw,
+      poolLabel: pool.label,
+      poolKind: pool.kind,
       statusRaw: statusLabel(statusRaw),
       status: status,
       statusScore: status === "vigente" ? 2 : status === "mora" ? 1 : 0,
@@ -567,6 +580,59 @@ function applyFilters() {
   renderCards(rows);
 }
 
+/* ---------------- Piscina (manillas del vecino) ---------------- */
+/* La columna PISCINA de la hoja dice, literal,
+   "Sin Manillas", "5 Maniilas Rojas" o "5 Manillas Verdes".
+
+   De ahí salen DOS cosas:
+   - `label`: el texto corto que se pinta (el color se dice una sola
+     vez por manilla: "5 rojas", no "5 Manillas Rojas").
+   - `kind`: el color de la manilla, para el punto de la tarjeta.
+     "none" (punto gris) es el literal "sin manillas"; "otro" es
+     cualquier texto que no reconozcamos.
+
+   El texto NO se corrige: si la hoja dice "Maniilas", así se lee en
+   la app (regla del aviso CANCELADO, sección 14 de RECUERDAME.md). */
+function poolInfo(raw) {
+  var t = normalizeText(raw);
+  if (!t) return { label: "", kind: "" };
+  /* Se escribe /ma?n+i+l/ y no "manilla" porque la hoja escribe las
+     manillas de dos formas: "manillas" (las verdes) y "maniilas", con
+     II (las rojas). El "sin" va PRIMERO, porque "sin manillas" también
+     contiene la palabra. */
+  if (/sin\s*man|candado/.test(t)) {
+    return { label: "Sin piscina", kind: "none" };
+  }
+  if (/ma?n+i+l/.test(t)) {
+    var kind = /roja/.test(t) ? "red" : (/verde/.test(t) ? "green" : "otro");
+    var n = (String(raw).match(/\d+/) || ["5"])[0];
+    var color = kind === "red" ? "rojas" : kind === "green" ? "verdes" : "";
+    var label = color ? (n + " " + color) : collapseSpaces(raw);
+    return { label: label, kind: kind };
+  }
+  return { label: collapseSpaces(raw), kind: "otro" };
+}
+
+/* La columna PISCINA se puede apagar desde config.js
+   (MOSTRAR_PISCINA: false). Por defecto se muestra. */
+function poolVisible() {
+  return APP_CONFIG.MOSTRAR_PISCINA !== false;
+}
+
+/* Punto de color de la manilla, para el pie de la tarjeta. */
+function poolDot(kind) {
+  var d = document.createElement("span");
+  d.className = "pool-dot pool-dot-" + (kind || "otro");
+  d.setAttribute("aria-hidden", "true");
+  return d;
+}
+
+/* Datos para el pie de la tarjeta: "" = no se pinta nada. */
+function poolCard(r) {
+  if (!poolVisible() || !r || !r.poolLabel) return "";
+  return r.poolLabel;
+}
+
 /* ---------------- Render tarjetas ---------------- */
 function renderCards(rows) {
   var wrap = $("results");
@@ -658,6 +724,17 @@ function cardFor(r) {
   hint.textContent = (r.plates.length ? r.plates.length + " placa" + (r.plates.length > 1 ? "s" : "") + " · " : "") +
     "Toca para ver ficha";
   foot.appendChild(hint);
+
+  /* Piscina: dato chico, en el pie, sin agregar alto a la tarjeta. */
+  var pool = poolCard(r);
+  if (pool) {
+    var poolEl = document.createElement("span");
+    poolEl.className = "card-pool card-pool-" + (r.poolKind || "otro");
+    poolEl.title = "Manillas de piscina (columna PISCINA)";
+    poolEl.appendChild(poolDot(r.poolKind));
+    poolEl.appendChild(document.createTextNode(pool));
+    foot.appendChild(poolEl);
+  }
   foot.appendChild(arrow());
   body.appendChild(foot);
 
@@ -705,6 +782,7 @@ function openDetail(r) {
   banner.appendChild(bTitle);
   banner.appendChild(bSub);
   pintarCancelado(r);
+  pintarPiscina(r);
 
   $("dtBlock").textContent = formatBlockLabel(r.block) || "—";
 
@@ -1994,4 +2072,38 @@ function pintarCancelado(r) {
 
   banner.appendChild(badge);
   banner.classList.add("con-aviso");
+}
+
+/* ================================================================
+   PISCINA — las manillas del vecino (una línea tenue en la ficha)
+   ================================================================
+   A diferencia de CANCELADO, esta columna SÍ está en la pestaña de los
+   vecinos, así que no hay que descargar nada aparte: el dato ya viene
+   leído en cada vecino (`poolLabel` y `poolKind`, ver buildRows).
+
+   Es solo informativo: una línea chica debajo del letrero de estado.
+   Si la hoja no tiene la columna, la casilla está vacía o se apagó con
+   `MOSTRAR_PISCINA: false`, no se pinta nada. */
+function pintarPiscina(r) {
+  var wrap = $("dtPoolWrap");
+  var box = $("dtPool");
+  if (!wrap || !box) return;
+
+  box.innerHTML = "";
+  var txt = poolVisible() ? poolCard(r) : "";
+  if (!txt) { wrap.hidden = true; return; }
+
+  var cap = document.createElement("span");
+  cap.className = "dt-pool-cap";
+  cap.textContent = "Piscina";
+  box.appendChild(cap);
+
+  var el = document.createElement("span");
+  el.className = "dt-pool-val dt-pool-" + (r.poolKind || "otro");
+  el.title = "Manillas de piscina (columna PISCINA)";
+  el.appendChild(poolDot(r.poolKind));
+  el.appendChild(document.createTextNode(txt));
+  box.appendChild(el);
+
+  wrap.hidden = false;
 }
