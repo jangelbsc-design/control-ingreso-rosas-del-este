@@ -136,32 +136,25 @@ Se muestra **discreta**, en dos sitios:
 └─────────────────────────────────────┘
 ```
 
-**2) En la ficha del vecino** — una línea tenue debajo del letrero de estado, alineada a la derecha:
+**2) En la ficha del vecino** — El estado se muestra como un **botón interactivo** debajo del letrero de estado, alineado a la derecha:
 
 ```
 EN MORA                        ┌──────────────┐
 Tiene deudas pendientes...     │ CANCELADO    │
                                │ Enero 2025   │
                                └──────────────┘
-                        PISCINA  ● Sin Manillas
+                        PISCINA [● Sin Manillas]
 ```
 
-Ese renglón **no agrega alto a la tarjeta**: va en la línea del pie que ya existía (medido: 0 px de diferencia, 0 solapes). En la ficha ocupa 1 sola línea (28 px).
+Al tocar el botón de estado, se despliega un **selector rápido** con las opciones predefinidas:
+* ⚪ **Sin Manillas**
+* 🔴 **5 Manillas Rojas**
+* 🟢 **5 Manillas Verdes**
 
-**Qué dice y con qué color** — **el texto sale LITERAL de la hoja, tal cual está escrito**:
+**Sincronización en tiempo real**: Al elegir una opción, la app se conecta silenciosamente a la hoja de Google Sheets (vía el script `Bitacora.gs` mediante la orden `updatePool`) y actualiza la celda de la columna `PISCINA` en la pestaña `PROPIETARIOS`. Esto evita tener que abrir el Excel manualmente para dar de alta o bajar las manillas de un vecino. La app mostrará "Guardando en Google Sheets..." y luego "Guardado en Google Sheets ✓".
 
-| En la hoja (columna F) | Se muestra en la app | Punto |
-|---|---|---|
-| `Sin Manillas` | **Sin Manillas** | gris |
-| `5 Maniilas Rojas` | **5 Maniilas Rojas** | rojo |
-| `5 Manillas Verdes` | **5 Manillas Verdes** | verde |
-| Cualquier otro texto | tal cual está en la hoja | gris |
-
-> **La app no reescribe, no resume y no corrige este dato.** Si la hoja dice `5 Maniilas Rojas` (con **II**), en la app se lee `5 Maniilas Rojas`. Si la hoja dice `Sin Manillas`, se lee `Sin Manillas` — **no** dice "Sin piscina". Lo único que la app deduce por su cuenta es el **color del puntito**, que es una ayuda visual y no parte del texto. Misma regla que el aviso CANCELADO (sección 14).
-
-> **El texto sale literal porque la hoja es la fuente de verdad.** Si en algún momento escribís otra cosa ("Prestadas", "3 Rojas y 2 Verdes"), eso es exactamente lo que se verá, sin adaptarlo.
-
-> Si la hoja no tiene la columna, o la casilla está **vacía**, no se pinta nada (ni el punto ni el renglón).
+> **La app no reescribe, no resume y no corrige este dato.** Si la hoja dice algo distinto (como "Prestadas"), en la app se leerá tal cual, aunque el selector sólo ofrecerá los 3 botones estándar para cambiarlo.
+> Si la hoja no tiene la columna, o la casilla está **vacía**, no se pinta nada (ni el punto ni el renglón) hasta que el vecino tenga manillas, o se le asigne desde el propio excel.
 
 **Para apagarlo por completo:** poner `MOSTRAR_PISCINA: false` en `js/config.js`. La app queda exactamente como antes, como si la columna no existiera.
 
