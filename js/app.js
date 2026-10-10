@@ -581,36 +581,38 @@ function applyFilters() {
 }
 
 /* ---------------- Piscina (manillas del vecino) ---------------- */
-/* La columna PISCINA de la hoja dice, literal,
+/* La columna PISCINA de la hoja dice, tal cual,
    "Sin Manillas", "5 Maniilas Rojas" o "5 Manillas Verdes".
 
-   De ahí salen DOS cosas:
-   - `label`: el texto corto que se pinta (el color se dice una sola
-     vez por manilla: "5 rojas", no "5 Manillas Rojas").
-   - `kind`: el color de la manilla, para el punto de la tarjeta.
-     "none" (punto gris) es el literal "sin manillas"; "otro" es
-     cualquier texto que no reconozcamos.
+   REGLA: el texto que se pinta es LITERAL, el de la hoja. No se
+   reescribe, no se resume y no se corrige: si la hoja dice
+   "5 Maniilas Rojas" (con II), en la app se lee "5 Maniilas
+   Rojas". Si algún día tú escribís "Sin Manillas" o cualquier
+   otra cosa, eso es lo que aparece. Misma regla que el aviso
+   CANCELADO (sección 14 de RECUERDAME.md).
 
-   El texto NO se corrige: si la hoja dice "Maniilas", así se lee en
-   la app (regla del aviso CANCELADO, sección 14 de RECUERDAME.md). */
+   Lo único que la app deduce por su cuenta es el COLOR del
+   puntito, que es una ayuda visual y no parte del texto:
+     "Sin Manillas"  -> punto gris   (kind "none")
+     "... Rojas"      -> punto rojo   (kind "red")
+     "... Verdes"     -> punto verde  (kind "green")
+     cualquier otro   -> punto gris   (kind "otro")
+
+   Si la casilla está vacía no se pinta nada. */
 function poolInfo(raw) {
-  var t = normalizeText(raw);
-  if (!t) return { label: "", kind: "" };
-  /* Se escribe /ma?n+i+l/ y no "manilla" porque la hoja escribe las
-     manillas de dos formas: "manillas" (las verdes) y "maniilas", con
-     II (las rojas). El "sin" va PRIMERO, porque "sin manillas" también
-     contiene la palabra. */
-  if (/sin\s*man|candado/.test(t)) {
-    return { label: "Sin piscina", kind: "none" };
-  }
-  if (/ma?n+i+l/.test(t)) {
-    var kind = /roja/.test(t) ? "red" : (/verde/.test(t) ? "green" : "otro");
-    var n = (String(raw).match(/\d+/) || ["5"])[0];
-    var color = kind === "red" ? "rojas" : kind === "green" ? "verdes" : "";
-    var label = color ? (n + " " + color) : collapseSpaces(raw);
-    return { label: label, kind: kind };
-  }
-  return { label: collapseSpaces(raw), kind: "otro" };
+  var texto = collapseSpaces(raw);   // literal de la hoja, solo sin espacios de sobra
+  if (!texto) return { label: "", kind: "" };
+
+  var t = normalizeText(texto);
+  var kind;
+  /* El "sin" va PRIMERO porque "sin manillas" también contiene la
+     palabra. Y se escribe /ma?n+i+l/ porque la hoja escribe las
+     manillas de dos formas: "manillas" y "maniilas", con II. */
+  if (/sin\s*man|candado/.test(t)) kind = "none";
+  else if (/ma?n+i+l/.test(t)) kind = /roja/.test(t) ? "red" : (/verde/.test(t) ? "green" : "otro");
+  else kind = "otro";
+
+  return { label: texto, kind: kind };
 }
 
 /* La columna PISCINA se puede apagar desde config.js
