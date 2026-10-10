@@ -1,13 +1,13 @@
 /* Service Worker · Urbanización Rosas del Este */
-var CACHE = "rde-app-v22";
+var CACHE = "rde-app-v23";
 var ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=22",
-  "./js/config.js?v=22",
-  "./js/utils.js?v=22",
-  "./js/app.js?v=22",
-  "./manifest.webmanifest?v=22",
+  "./styles.css?v=23",
+  "./js/config.js?v=23",
+  "./js/utils.js?v=23",
+  "./js/app.js?v=23",
+  "./manifest.webmanifest?v=23",
   "./icons/logo-192.png",
   "./icons/logo-512.png",
   "./icons/logo-maskable-512.png",

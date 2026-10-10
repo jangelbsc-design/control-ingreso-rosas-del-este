@@ -723,8 +723,10 @@ function cardFor(r) {
   foot.className = "card-foot";
   var hint = document.createElement("span");
   hint.className = "card-hint";
-  hint.textContent = (r.plates.length ? r.plates.length + " placa" + (r.plates.length > 1 ? "s" : "") + " · " : "") +
-    "Toca para ver ficha";
+  /* Solo la frase. Antes decía "2 placas · Toca para ver ficha", pero el
+     número está de más: las placas ya se ven arriba, una por plaquita
+     (y hay vecinos con 4). Pedido de la administración, v23. */
+  hint.textContent = "Toca para ver ficha";
   foot.appendChild(hint);
 
   /* Piscina: dato chico, en el pie, sin agregar alto a la tarjeta. */

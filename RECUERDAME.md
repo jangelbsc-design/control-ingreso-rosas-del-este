@@ -81,6 +81,21 @@ La app **reconoce las columnas automáticamente** por su nombre. Reconoce cualqu
 
 Tu pestaña `PROPIETARIOS` tiene exactamente: `MANZANO · PROPIETARIO · CELULAR · ESTADO · PLACA · PISCINA · UBICACIÓN`. Solo quedó pendiente tu parte: **llenar la columna PLACA** con las carrocerías de cada vecino.
 
+### 3.3.1 Columna PLACA (varios vehículos en una casilla)
+
+Un vecino puede tener más de un vehículo. Escribelos **en la misma casilla separados por ` - `**, y la app los muestra como una plaquita cada uno:
+
+```
+726NTE - 4057BKP
+1875IYF - 5175CIY - 5664RPC - 2602HPB
+```
+
+También funcionan la coma, la barra y el espacio como separadores. Lo que la app **no** hace es partir una placa por su guion interno (`4412-SHX` es **una** placa, no dos).
+
+> Con los datos reales (octubre 2026): **51 vecinos sin placa**, 18 con una y 24 con varias (hay uno con 4).
+
+> **En la tarjeta ya no sale el contador** de placas (antes decía "2 placas · Toca para ver ficha"). Se quitó en la v23 porque estaba de más: las placas ya se ven arriba, una por plaquita. La **ficha** sí las sigue mostrando todas.
+
 ### 3.4 Columna UBICACIÓN (mini mapa en la ficha)
 Si agregas una columna `UBICACIÓN` (o `GPS`, `COORDENADAS`, `LATITUD`), la ficha de cada vecino mostrará un **mini mapa** de esa ubicación y, al tocarlo, abrirá **Google Maps** completo. Puedes poner:
 - **Coordenadas**: `-17.7833, -63.1821` (latitud, longitud del lote), o
@@ -612,4 +627,4 @@ las 4 vistas abren**, `node --check js/app.js` OK y sin mojibake.
 
 ---
 
-*Última actualización: octubre 2026 (v22: **la columna `PISCINA` de la hoja se ve en la tarjeta del vecino y en la ficha, con el texto LITERAL de la hoja** — nada de reescribirlo ("Sin Manillas" se lee "Sin Manillas", "5 Maniilas Rojas" se lee "5 Maniilas Rojas") — sección 3.6. Antes: v21 con el texto resumido, tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4, con el **bug corregido que impedía que el mapa se mostrara** (v17)). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: octubre 2026 (v23: **la tarjeta ya no dice "2 placas"**, solo "Toca para ver ficha"; las placas siguen visibles como plaquitas — sección 3.3.1. Antes: v22 con **el dato de piscina literal de la hoja** — sección 3.6, v21 con el chip de piscina, tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4, con el **bug corregido que impedía que el mapa se mostrara** (v17)). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
