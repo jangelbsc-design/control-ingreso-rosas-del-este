@@ -451,15 +451,21 @@ body.locked { overflow: hidden; }
   word-break: break-word;
 }
 
-/* Piscina: una línea tenue debajo del letrero de estado. */
+/* Piscina: una línea tenue debajo del letrero de estado o botones. */
 .dt-pool {
-  padding: 7px 16px 0;
+  padding: 10px 16px 0;
   text-align: right;
+}
+.dt-pool-header {
+  display: flex; justify-content: flex-end; align-items: center; margin-bottom: 4px;
 }
 .dt-pool-box {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; color: var(--gris-texto);
+  font-size: 13px; color: var(--gris-texto);
+  background: #f0f0f2; border: 1px solid #d0d3d7; border-radius: 8px;
+  padding: 6px 10px; cursor: pointer; transition: background .1s;
 }
+.dt-pool-box:active { background: #e0e0e3; }
 .dt-pool-cap {
   font-size: 10px; font-weight: 800; letter-spacing: .9px;
   text-transform: uppercase; color: #9aa0a6;
@@ -469,6 +475,22 @@ body.locked { overflow: hidden; }
   font-weight: 700; color: #3c4043;
 }
 .dt-pool-none { font-weight: 600; color: #9aa0a6; }
+
+/* Selector de edición de manillas */
+.dt-pool-editor {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  margin-top: 6px;
+}
+.btn-pool-opt {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px; font-size: 13px; font-weight: 700;
+  background: var(--blanco); color: var(--negro);
+  border: 1px solid var(--gris-linea); border-radius: 8px;
+  cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  transition: transform .05s, border-color .1s;
+}
+.btn-pool-opt:active { transform: scale(0.97); }
+.btn-pool-opt:focus { outline: none; border-color: var(--verde); }
 
 .detail-content { padding: 4px 16px 20px; }
 .dt-section { margin-top: 16px; }

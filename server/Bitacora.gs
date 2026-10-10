@@ -175,6 +175,60 @@ function doPost(e) {
       return outJson_({ ok: true });
     }
 
+    if (action === "updatePool") {
+      var sheetName = body.sheetName || "PROPIETARIOS";
+      var block = String(body.block || "").trim();
+      var owner = String(body.owner || "").trim();
+      var value = body.value || "";
+      
+      var ss = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
+      var sh = ss.getSheetByName(sheetName);
+      if (!sh) return outJson_({ ok: false, error: "No se encuentra la pestaña " + sheetName });
+      
+      var data = sh.getDataRange().getValues();
+      if (data.length < 2) return outJson_({ ok: false, error: "Hoja sin datos" });
+      
+      var headers = data[0].map(function(h) { return String(h).trim().toLowerCase(); });
+      
+      var colBlock = -1, colOwner = -1, colPool = -1;
+      for (var j = 0; j < headers.length; j++) {
+        var h = headers[j];
+        if (h.indexOf("mazano") >= 0 || h.indexOf("manzano") >= 0 || h.indexOf("bloque") >= 0) { if (colBlock === -1) colBlock = j; }
+        if (h.indexOf("propietario") >= 0 || h.indexOf("nombre") >= 0) { if (colOwner === -1) colOwner = j; }
+        if (h.indexOf("piscina") >= 0 || h.indexOf("manilla") >= 0) { if (colPool === -1) colPool = j; }
+      }
+      
+      if (colBlock === -1 || colOwner === -1 || colPool === -1) {
+        return outJson_({ ok: false, error: "No se encontraron las columnas (Manzano/Propietario/Piscina) en la hoja" });
+      }
+      
+      var norm = function(s) { 
+        return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ""); 
+      };
+      
+      var nBlock = norm(block);
+      var nOwner = norm(owner);
+      
+      var rowIndex = -1;
+      for (var i = 1; i < data.length; i++) {
+        var b = norm(String(data[i][colBlock]));
+        var o = norm(String(data[i][colOwner]));
+        
+        if (b === nBlock && o === nOwner) {
+          rowIndex = i + 1; // 1-based index
+          break;
+        }
+      }
+      
+      if (rowIndex !== -1) {
+        // Enviar con apóstrofe si es un número, aunque estos son textos ("Sin Manillas", "5 Manillas Rojas")
+        sh.getRange(rowIndex, colPool + 1).setValue(value);
+        return outJson_({ ok: true });
+      } else {
+        return outJson_({ ok: false, error: "Vecino no encontrado en la hoja" });
+      }
+    }
+
     return outJson_({ ok: false, error: "Acción inválida: " + action });
   } catch (err) {
     return outJson_({ ok: false, error: String(err) });

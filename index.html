@@ -262,9 +262,23 @@
         <div class="dt-banner-sub">—</div>
       </div>
 
-      <!-- Piscina: una sola línea, discreta, debajo del letrero de estado -->
+      <!-- Piscina: selector de manillas, debajo del letrero de estado -->
       <div id="dtPoolWrap" class="dt-pool" hidden>
-        <div id="dtPool" class="dt-pool-box"></div>
+        <div class="dt-pool-header">
+          <span class="dt-pool-cap">Piscina</span>
+        </div>
+        <button type="button" id="dtPool" class="dt-pool-box" title="Cambiar manillas"></button>
+        <div id="dtPoolEditor" class="dt-pool-editor" hidden>
+          <button type="button" class="btn-pool-opt" data-val="Sin Manillas">
+            <span class="pool-dot pool-dot-none"></span> Sin Manillas
+          </button>
+          <button type="button" class="btn-pool-opt" data-val="5 Manillas Rojas">
+            <span class="pool-dot pool-dot-red"></span> 5 Manillas Rojas
+          </button>
+          <button type="button" class="btn-pool-opt" data-val="5 Manillas Verdes">
+            <span class="pool-dot pool-dot-green"></span> 5 Manillas Verdes
+          </button>
+        </div>
       </div>
 
       <div class="detail-content">

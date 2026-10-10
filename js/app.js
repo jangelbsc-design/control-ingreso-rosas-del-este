@@ -2091,23 +2091,81 @@ function pintarCancelado(r) {
 function pintarPiscina(r) {
   var wrap = $("dtPoolWrap");
   var box = $("dtPool");
-  if (!wrap || !box) return;
+  var editor = $("dtPoolEditor");
+  if (!wrap || !box || !editor) return;
 
-  box.innerHTML = "";
   var txt = poolVisible() ? poolCard(r) : "";
   if (!txt) { wrap.hidden = true; return; }
 
-  var cap = document.createElement("span");
-  cap.className = "dt-pool-cap";
-  cap.textContent = "Piscina";
-  box.appendChild(cap);
-
+  box.innerHTML = "";
   var el = document.createElement("span");
   el.className = "dt-pool-val dt-pool-" + (r.poolKind || "otro");
-  el.title = "Manillas de piscina (columna PISCINA)";
   el.appendChild(poolDot(r.poolKind));
   el.appendChild(document.createTextNode(txt));
   box.appendChild(el);
 
   wrap.hidden = false;
+  editor.hidden = true;
+
+  box.onclick = function() {
+    if (!bitacoraURL()) {
+      toast("No hay URL de servidor configurada para guardar.");
+      return;
+    }
+    editor.hidden = !editor.hidden;
+  };
+
+  if (!editor.dataset.bound) {
+    var opts = editor.querySelectorAll(".btn-pool-opt");
+    for (var i = 0; i < opts.length; i++) {
+      opts[i].onclick = function() {
+        var newVal = this.getAttribute("data-val");
+        editor.hidden = true;
+        actualizarPiscina(state.selected, newVal);
+      };
+    }
+    editor.dataset.bound = "true";
+  }
+}
+
+function actualizarPiscina(r, newVal) {
+  if (!r) return;
+  
+  var pool = poolInfo(newVal);
+  r.poolRaw = newVal;
+  r.poolLabel = pool.label;
+  r.poolKind = pool.kind;
+  
+  pintarPiscina(r);
+  
+  if (state.tab === "all") renderCards(state.rows);
+  else renderCards(state.rows.filter(function(x) { return x.status === state.tab; }));
+  
+  var url = bitacoraURL();
+  if (!url) return;
+  
+  toast("Guardando en Google Sheets...");
+  
+  fetch(url, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "updatePool",
+      sheetName: APP_CONFIG.SHEET_NAME || "PROPIETARIOS",
+      block: r.block,
+      owner: r.ownerName,
+      value: newVal
+    }),
+    cache: "no-store"
+  }).then(function(res) {
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  }).then(function(j) {
+    if (j && j.ok) {
+      toast("Guardado en Google Sheets ✓");
+    } else {
+      toast("Error al guardar: " + (j.error || "Desconocido"));
+    }
+  }).catch(function(e) {
+    toast("Error de red al guardar");
+  });
 }
