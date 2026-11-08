@@ -466,6 +466,8 @@ body.locked { overflow: hidden; }
   padding: 6px 10px; cursor: pointer; transition: background .1s;
 }
 .dt-pool-box:active { background: #e0e0e3; }
+.dt-pool-box:disabled { cursor: default; opacity: 1; color: var(--gris-texto); }
+.dt-pool-box:disabled:active { background: #f0f0f2; }
 .dt-pool-cap {
   font-size: 10px; font-weight: 800; letter-spacing: .9px;
   text-transform: uppercase; color: #9aa0a6;

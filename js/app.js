@@ -2104,10 +2104,18 @@ function pintarPiscina(r) {
   el.appendChild(document.createTextNode(txt));
   box.appendChild(el);
 
+  /* El selector es solo para administración. El resto ve el dato, sin
+     botón: así el guardia no puede cambiar las manillas por error. */
+  var editable = isAdmin();
+
   wrap.hidden = false;
   editor.hidden = true;
+  box.disabled = !editable;
+  if (editable) box.title = "Cambiar manillas";
+  else box.removeAttribute("title");
 
   box.onclick = function() {
+    if (!editable) return;
     if (!bitacoraURL()) {
       toast("No hay URL de servidor configurada para guardar.");
       return;
@@ -2128,24 +2136,43 @@ function pintarPiscina(r) {
   }
 }
 
+function revertirPiscina(r, previo) {
+  if (!r || !previo) return;
+  r.poolRaw = previo.raw;
+  r.poolLabel = previo.label;
+  r.poolKind = previo.kind;
+  /* Si ya se abrió otra ficha, no pintar encima de la nueva: al abrirla
+     de nuevo, openDetail() vuelve a leer el valor revertido. */
+  if (state.selected === r) pintarPiscina(r);
+  applyFilters();
+}
+
 function actualizarPiscina(r, newVal) {
   if (!r) return;
-  
+
+  if (!isAdmin()) {
+    toast("Solo administración puede cambiar las manillas.");
+    return;
+  }
+
+  var url = bitacoraURL();
+  if (!url) {
+    toast("No hay URL de servidor configurada para guardar.");
+    return;
+  }
+
+  var previo = { raw: r.poolRaw, label: r.poolLabel, kind: r.poolKind };
   var pool = poolInfo(newVal);
+
   r.poolRaw = newVal;
   r.poolLabel = pool.label;
   r.poolKind = pool.kind;
-  
+
   pintarPiscina(r);
-  
-  if (state.tab === "all") renderCards(state.rows);
-  else renderCards(state.rows.filter(function(x) { return x.status === state.tab; }));
-  
-  var url = bitacoraURL();
-  if (!url) return;
-  
+  applyFilters();
+
   toast("Guardando en Google Sheets...");
-  
+
   fetch(url, {
     method: "POST",
     body: JSON.stringify({
@@ -2161,11 +2188,15 @@ function actualizarPiscina(r, newVal) {
     return res.json();
   }).then(function(j) {
     if (j && j.ok) {
+      /* El caché offline solo se actualiza cuando Google confirmó. */
+      cacheRows(state.rows);
       toast("Guardado en Google Sheets ✓");
     } else {
+      revertirPiscina(r, previo);
       toast("Error al guardar: " + (j.error || "Desconocido"));
     }
   }).catch(function(e) {
+    revertirPiscina(r, previo);
     toast("Error de red al guardar");
   });
 }

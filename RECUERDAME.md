@@ -62,7 +62,7 @@ Todo se configura en **`js/config.js`**:
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado, ahora recarga sola cada 5 min) | `5` |
 | `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
-| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `16` |
+| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `24` |
 | `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/QR pago expensas.jpeg` |
 
 ### 3.3 Columnas de la hoja
@@ -118,8 +118,8 @@ Si la columna queda como *número*, Google **borra** (envía vacías) las casill
 ```
 También funcionan `7603 6960 - 7903 9893`, `76-036-960` o `+591 7123-4567`. La app reconoce cada número, los muestra separados (sin el prefijo +591) y al tocarlos ofrece Llamar / WhatsApp con el prefijo del país (591).
 
-### 3.6 Columna PISCINA (las manillas del vecino) — v22
-La columna `PISCINA` **está en la misma pestaña `PROPIETARIOS`**, así que la app la lee con todo lo demás (no hay que descargar nada aparte, a diferencia de CANCELADO). Es **informativa**: la app no cobra ni descuenta nada con este dato.
+### 3.6 Columna PISCINA (las manillas del vecino) — v24
+La columna `PISCINA` **está en la misma pestaña `PROPIETARIOS`**, así que la app la lee con todo lo demás (no hay que descargar nada aparte, a diferencia de CANCELADO). Es un dato de **consulta y asignación**: la app no cobra ni descuenta nada con este dato.
 
 Se muestra **discreta**, en dos sitios:
 
@@ -132,11 +132,11 @@ Se muestra **discreta**, en dos sitios:
 │ [ 4449IBP ]                         │
 │ [ 7707 4393 ]                       │
 │ ─────────────────────────────────── │
-│ Toca para ver ficha   ● 5 Maniilas Rojas   ›  │
+│ Toca para ver ficha   ● 5 Manillas Rojas   ›  │
 └─────────────────────────────────────┘
 ```
 
-**2) En la ficha del vecino** — El estado se muestra como un **botón interactivo** debajo del letrero de estado, alineado a la derecha:
+**2) En la ficha del vecino** — La piscina se muestra como un **chip** debajo del letrero de estado, alineado a la derecha (el cuadro CANCELADO, si existe, es un aviso aparte):
 
 ```
 EN MORA                        ┌──────────────┐
@@ -146,19 +146,21 @@ Tiene deudas pendientes...     │ CANCELADO    │
                         PISCINA [● Sin Manillas]
 ```
 
-Al tocar el botón de estado, se despliega un **selector rápido** con las opciones predefinidas:
+Al tocar el chip de **PISCINA**, se despliega un **selector rápido** con las opciones predefinidas:
 * ⚪ **Sin Manillas**
 * 🔴 **5 Manillas Rojas**
 * 🟢 **5 Manillas Verdes**
 
-**Sincronización en tiempo real**: Al elegir una opción, la app se conecta silenciosamente a la hoja de Google Sheets (vía el script `Bitacora.gs` mediante la orden `updatePool`) y actualiza la celda de la columna `PISCINA` en la pestaña `PROPIETARIOS`. Esto evita tener que abrir el Excel manualmente para dar de alta o bajar las manillas de un vecino. La app mostrará "Guardando en Google Sheets..." y luego "Guardado en Google Sheets ✓".
+> **Solo Admin:** el chip y el selector están reservados al rol **Admin**. Los usuarios de Ingreso ven el dato, pero no pueden abrir el selector ni guardar cambios.
+
+**Sincronización en tiempo real**: Al elegir una opción, la app se conecta silenciosamente a la hoja de Google Sheets (vía el script `Bitacora.gs` mediante la orden `updatePool`) y actualiza la celda de la columna `PISCINA` en la pestaña `PROPIETARIOS`. Esto evita tener que abrir el Excel manualmente para dar de alta o bajar las manillas de un vecino. La app mostrará "Guardando en Google Sheets..." y luego "Guardado en Google Sheets ✓". Si la red falla o la hoja responde con error, la app **vuelve al valor anterior** y avisa; el caché offline solo se actualiza cuando el guardado se confirma.
 
 > **La app no reescribe, no resume y no corrige este dato.** Si la hoja dice algo distinto (como "Prestadas"), en la app se leerá tal cual, aunque el selector sólo ofrecerá los 3 botones estándar para cambiarlo.
 > Si la hoja no tiene la columna, o la casilla está **vacía**, no se pinta nada (ni el punto ni el renglón) hasta que el vecino tenga manillas, o se le asigne desde el propio excel.
 
 **Para apagarlo por completo:** poner `MOSTRAR_PISCINA: false` en `js/config.js`. La app queda exactamente como antes, como si la columna no existiera.
 
-**Datos reales de la hoja (94 filas · octubre 2026):** 71 vecinos con `Sin Manillas`, 19 con `5 Maniilas Rojas`, 3 con `5 Manillas Verdes`. Los 30 en mora aparecen como **Sin Manillas**, y 41 vigentes también: **"Sin Manillas" no distingue mora de vigente**, ese dato ya lo dice el estado del vecino.
+**Datos reales de la hoja (93 filas · noviembre 2026):** 71 vecinos con `Sin Manillas`, 19 con `5 Manillas Rojas`, 3 con `5 Manillas Verdes`. Los 27 en mora aparecen como **Sin Manillas**, y 44 vigentes también: **"Sin Manillas" no distingue mora de vigente**, ese dato ya lo dice el estado del vecino.
 
 > **Sobre el typo "Maniilas":** la hoja tuvo 18 filas con `Maniilas` (con **II** en vez de LL) y ya fueron corregidas a `Manillas` (verificado el 10/10/2026: las 19 filas dicen `5 Manillas Rojas`). Si vuelve a colarse un typo, la app **no lo arregla**: se lee tal cual, porque la hoja es la fuente de verdad. El puntito rojo sale igual de todas formas, porque ese color lo deduce la app y no depende de cómo esté escrito.
 
@@ -268,7 +270,7 @@ Hoy **ya está publicado y se actualiza solo**. Cada vez que haces `git push` a 
 | ¿Cómo envío WhatsApp con el **QR adjunto**? | Toca **WhatsApp** y usa el botón **Compartir** del teléfono eligiendo WhatsApp: la foto del QR viaja adjunta con el mensaje. Si no, guarda el QR y adjúntalo manualmente. |
 | ¿Cómo borro un **registro de la bitácora**? | Solo el **Admin** ve un ícono de basurero (🗑) en cada registro de la Bitácora. Lo toca, confirma y el registro se borra de todos los celulares y de la hoja `bitacora`. También puedes borrar la fila directamente en la hoja. Si el Admin borra **sin conexión**, el borrado queda anotado en ese celular y se efectúa cuando vuelve la red (el registro **no "revive"**). |
 | No sale el **mini mapa** en la ficha del vecino | Ya estaba corregido el bug que lo impedía (faltaba propagar la columna de ubicación al procesar los registros). Si aún no te sale en un celular, verifica, en orden: ① la columna se llama `UBICACIÓN` (o `GPS`/`COORDENADAS`) y la casilla tiene las coordenadas (ej. `-17.79663154067356, -63.08891626799334`); ② en la Bitácora la versión sea la última (v17 o superior); ③ solo las filas con dato muestran mapa. Luego **cierra la app por completo y ábrela con internet** (espera ~10 s y recarga una vez más). Si sigue sin salir, **desinstala y vuelve a instalar** la app (el celular puede tener guardada una copia vieja). El mapa necesita internet para cargar. |
-| No sale el dato de **PISCINA** en la tarjeta o en la ficha | Verifica, en orden: ① la columna se llama `PISCINA` (o `MANILLAS`) **en la pestaña `PROPIETARIOS`**; ② la casilla tiene texto (las vacías no pintan nada); ③ `MOSTRAR_PISCINA` no esté en `false` en `js/config.js`; ④ en la Bitácora la versión sea **v22 o superior**. Si el texto sale pero **sin el punto de color**, revisa que la casilla diga el color (ej. `5 Manillas Rojas`): un texto raro se muestra literal, en gris. |
+| No sale el dato de **PISCINA** en la tarjeta o en la ficha | Verifica, en orden: ① la columna se llama `PISCINA` (o `MANILLAS`) **en la pestaña `PROPIETARIOS`**; ② la casilla tiene texto (las vacías no pintan nada); ③ `MOSTRAR_PISCINA` no esté en `false` en `js/config.js`; ④ en la Bitácora la versión sea **v24 o superior** (el selector solo funciona para Admin). Si el texto sale pero **sin el punto de color**, revisa que la casilla diga el color (ej. `5 Manillas Rojas`): un texto raro se muestra literal, en gris. |
 
 ---
 
@@ -613,11 +615,11 @@ las 4 vistas abren**, `node --check js/app.js` OK y sin mojibake.
   (ahora solo vive en el navegador).
 
 - 🔒 La app ya **exige iniciar sesión** para usarse (bloqueada con la pantalla de inicio, pestaña `Usuarios`). Pendiente si algún día se quiere: validación 100 % servidora (que las "contraseñas" no viajen como texto visible en la página pública).
-- 🏊 **El dato de PISCINA de la hoja** ya se ve discreto en la tarjeta y en la ficha, **con el texto literal de la columna** (sección 3.6, v22). Lo que sigue pendiente es el **control completo** de manillas (contador `−`/`+`, cobro de extras, devolución y sincronización con Google Sheets), que está en resguardo sin conectar (sección 13).
+- 🏊 **El dato de PISCINA de la hoja** ya se ve discreto en la tarjeta y en la ficha, **con el texto literal de la columna** (sección 3.6, v22), y desde la **v24** un **selector de 3 opciones solo para Admin** lo guarda en Google Sheets, con reversión si falla. Lo que sigue pendiente es el **control completo** de manillas (contador `−`/`+`, cobro de extras y devolución), que está en resguardo sin conectar (sección 13).
 - 📷 Escáner de placas con la cámara (OCR).
 - 📊 Reportes mensuales de ingresos/salidas.
 - 🌐 Integración con N8N (si la administración usa flujos).
 
 ---
 
-*Última actualización: octubre 2026 (v23: **la tarjeta ya no dice "2 placas"**, solo "Toca para ver ficha"; las placas siguen visibles como plaquitas — sección 3.3.1. Antes: v22 con **el dato de piscina literal de la hoja** — sección 3.6, v21 con el chip de piscina, tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4, con el **bug corregido que impedía que el mapa se mostrara** (v17)). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+*Última actualización: noviembre 2026 (v24: **selector de piscina solo para Admin**, con guardado en Google Sheets que **revierte si falla** y **caché offline actualizado solo al confirmar**; el buscador **conserva el filtro** al cambiar manillas — sección 3.6. Antes: v23: **la tarjeta ya no dice "2 placas"**, solo "Toca para ver ficha"; las placas siguen visibles como plaquitas — sección 3.3.1. Antes: v22 con **el dato de piscina literal de la hoja** — sección 3.6, v21 con el chip de piscina, tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4, con el **bug corregido que impedía que el mapa se mostrara** (v17)). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
