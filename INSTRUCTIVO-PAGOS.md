@@ -26,8 +26,11 @@ el mes pagado**. Cada acción queda en la bitácora con origen `PAGO`.
 1. Abrí la hoja de los vecinos → **Extensiones → Apps Script**.
 2. Abrí el archivo de código (suele llamarse `Bitacora.gs` o `Código.gs`).
 3. **Ctrl+A** (seleccionar todo) y **Supr**.
-4. En este repo abrí **`server/Bitacora.gs`**, **Ctrl+A**, **Ctrl+C**.
-5. Pegá todo en el editor de Apps Script (**Ctrl+V**).
+4. En este repo abrí **`server/Codigo-para-pegar.gs`**, **Ctrl+A**, **Ctrl+C**
+   (es la misma lógica que `server/Bitacora.gs` pero sin el encabezado largo
+   de instrucciones, para que no se rompa al copiar).
+5. **Antes de pegar, confirmá que el editor quedó vacío** (Ctrl+A + Supr).
+   Pegá todo con **Ctrl+V**. Guardá y mirá que no haya errores en rojo.
 6. **Guardá** (Ctrl+S / ícono de disquete).
 7. **Implementar → Nueva implementación**:
    - Tipo: **Aplicación web**
@@ -76,6 +79,7 @@ ve en la Bitácora → debe decir **v25**.
 
 | Síntoma | Causa probable | Qué hacer |
 |---|---|---|
+| **`Illegal return statement`, línea 22** | Se pegó solo un fragmento, o quedó contenido viejo mezclado: un `return` quedó fuera de una función | Borrar **todo** el contenido del editor (Ctrl+A + Supr, verificar que quede vacío) y pegar completo `server/Codigo-para-pegar.gs`. Si aún falla, **Archivo → Historial de versiones** y restaurar la última versión que funcionaba, y volver a pegar |
 | `Acción inválida: updatePago` | Falta el Paso 1 | Pegar el `.gs` y volver a implementar |
 | `No se encuentran las pestañas…` | La hoja no se llama `PROPIETARIOS` o `Hoja1` | Revisar `SHEET_NAME` / `SHEET_CANCELADO` en `js/config.js` |
 | `Manzano no encontrado o duplicado` | El manzano no existe o está repetido en alguna pestaña | Revisar la hoja; la app no escribe nada en ese caso |

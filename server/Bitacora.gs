@@ -124,11 +124,22 @@ function outJson_(obj) {
 
 /* ---------- Utilidades para registrar pagos ---------- */
 
+/* Quita tildes sin usar normalize(), para que funcione también en el
+   motor antiguo de Apps Script (algunos proyectos viejos lo tienen). */
+function sinTildes_(s) {
+  return String(s == null ? "" : s)
+    .replace(/[áàäâã]/g, "a").replace(/[éèëê]/g, "e")
+    .replace(/[íìïî]/g, "i").replace(/[óòöôõ]/g, "o")
+    .replace(/[úùüû]/g, "u").replace(/[ñ]/g, "n")
+    .replace(/[ÁÀÄÂÃ]/g, "A").replace(/[ÉÈËÊ]/g, "E")
+    .replace(/[ÍÌÏÎ]/g, "I").replace(/[ÓÒÖÔÕ]/g, "O")
+    .replace(/[ÚÙÜÛ]/g, "U").replace(/[Ñ]/g, "N");
+}
+
 /* Encabezado normalizado: sin tildes, sin espacios, minúsculas.
    Así "GESTIÓN" se reconoce como "gestion". */
 function normHead_(s) {
-  return String(s == null ? "" : s).toLowerCase().normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  return sinTildes_(s).toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 /* Primera columna cuyo encabezado coincide exactamente con alguno
@@ -248,8 +259,8 @@ function doPost(e) {
         return outJson_({ ok: false, error: "No se encontraron las columnas (Manzano/Propietario/Piscina) en la hoja" });
       }
       
-      var norm = function(s) { 
-        return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, ""); 
+      var norm = function(s) {
+        return sinTildes_(s).toLowerCase().replace(/[^a-z0-9]/g, "");
       };
       
       var nBlock = norm(block);

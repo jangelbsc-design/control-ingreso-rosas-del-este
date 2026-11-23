@@ -653,10 +653,12 @@ y la hora del dispositivo.
 **Importante:** el cambio va en `server/Bitacora.gs` (nueva acción
 `updatePago`). Ese archivo **NO se sube con git**: hay que abrir el proyecto
 de Apps Script, reemplazar todo el código por el contenido de
-`server/Bitacora.gs`, guardar y hacer **Nueva implementación** (misma URL
+`server/Bitacora.gs` (o mejor: `server/Codigo-para-pegar.gs`, igual pero sin
+el encabezado largo), guardar y hacer **Nueva implementación** (misma URL
 `/exec`, ejecutar como *Yo*, acceso *Cualquier persona*). Sin ese paso el
-botón dará `Acción inválida: updatePago`. Instructivo completo en
-`INSTRUCTIVO-PAGOS.md`.
+botón dará `Acción inválida: updatePago`. Si sale `Illegal return statement`,
+es que el pegado quedó a medias: borrar todo y pegar el archivo completo.
+Instructivo completo en `INSTRUCTIVO-PAGOS.md`.
 
 Verificación usada: `node --check` en los 4 archivos JS + harness con mocks
 de Apps Script, **21/21 pruebas OK** (incluye pago, deshacer, año inválido,
