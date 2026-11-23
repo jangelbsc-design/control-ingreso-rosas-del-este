@@ -31,7 +31,8 @@ el mes pagado**. Cada acción queda en la bitácora con origen `PAGO`.
    de instrucciones, para que no se rompa al copiar).
 5. **Antes de pegar, confirmá que el editor quedó vacío** (Ctrl+A + Supr).
    Pegá todo con **Ctrl+V**. Guardá y mirá que no haya errores en rojo.
-6. **Implementar → Administrar implementaciones → lápiz (Editar) →
+6. **Guardá** (Ctrl+S / ícono de disquete).
+7. **Implementar → Administrar implementaciones → lápiz (Editar) →
    Versión: «Nueva versión» → Implementar.** Este paso es OBLIGATORIO:
    guardar no cambia lo que responde la URL `/exec`. Si solo guardás, la app
    sigue hablando con el código viejo.
@@ -39,12 +40,7 @@ el mes pagado**. Cada acción queda en la bitácora con origen `PAGO`.
 > **Diagnóstico rápido:** abrí en el navegador
 > `<TU_URL>/exec?action=diag`. Si devuelve JSON con `"ok":true`, el código
 > nuevo está activo. Si dice `Acción inválida: diag`, el deploy es viejo.
-6. **Guardá** (Ctrl+S / ícono de disquete).
-7. **Implementar → Nueva implementación**:
-   - Tipo: **Aplicación web**
-   - Ejecutar como: **Yo (tu cuenta)**
-   - Quién puede acceder: **Cualquier persona**
-   - Clic en **Implementar** y autorizá (Avanzado → Ir a… → Permitir).
+
 8. Copiá la URL que termina en **`/exec`** de la *Aplicación web* (NO la de
    *Prueba de desarrollo*). Debe ser **exactamente igual** a la que está en
    `js/config.js` → `BITACORA_URL`. Si te sale una URL distinta, pegá la
@@ -52,13 +48,20 @@ el mes pagado**. Cada acción queda en la bitácora con origen `PAGO`.
    `sw.js`, y hacé `git push` (si no, el Service Worker sigue sirviendo el
    `config.js` viejo con la URL anterior).
 
-> **URL actual (v26):**
-> `https://script.google.com/macros/s/AKfycbwtD4oVwzNlF59A-UKvuYvZ8EQD0wLxoR0fO9B-xu_qmp3rPn9I/exec`
+> **URL actual (v27):**
+> `https://script.google.com/macros/s/AKfycbxv4KBZdUdgCuKHrmT2yvzYIuGrrYFaC7g7gS54sgQK7P2crEmPP_OHG5zcERdQipdApg/exec`
 >
-> El script puede estar pegado en **cualquier documento** de Sheets: el
-> código usa `openByUrl` con el ID fijo en la línea 5, así que el documento
-> contenedor no importa. Lo que sí importa es que esa línea diga
+> Vive en un proyecto **independiente** de Apps Script (`ROSAS - BITACORA
+> OFICIAL`), no atado a ninguna hoja: así no se rompe si se mueve el
+> documento. El código usa `openByUrl` con el ID fijo en la línea 5, así que
+> el documento contenedor no importa. Lo que sí importa es que esa línea diga
 > `1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO`.
+>
+> **Cómo debe verse `?action=diag` (v27):** en `PROPIETARIOS`,
+> `"filaEncabezado": 1`, `"mz": 0`, `"estado": 3`, `"filas2240": [57]`. En
+> `Hoja1`, `"filaEncabezado": 2`, `"mz": 2`, `"cancelado": 10`,
+> `"gestion": 11`, `"estado": 12`, `"filas2240": [62]`. Si `mz` sale `-1` o
+> `estado` sale `4`, el deploy está viejo.
 
 > Si hacés una implementación **nueva** sin borrar la anterior, Google puede
 > darte una URL distinta. Para conservar la misma URL, en **Implementar →

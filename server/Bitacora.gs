@@ -142,13 +142,14 @@ function normHead_(s) {
   return sinTildes_(s).toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-/* Primera columna cuyo encabezado coincide exactamente con alguno
-   de los nombres dados (ya normalizados). */
+/* Primera columna cuyo encabezado coincide con alguno de los nombres
+   dados. Se recorre PRIMERO el nombre (en el orden de la lista) y
+   después las columnas: así "estado" gana siempre sobre "situacion",
+   aunque "situacion" aparezca antes en la hoja. */
 function colByNames_(headers, names) {
-  for (var i = 0; i < headers.length; i++) {
-    var h = normHead_(headers[i]);
-    for (var j = 0; j < names.length; j++) {
-      if (h === names[j]) return i;
+  for (var j = 0; j < names.length; j++) {
+    for (var i = 0; i < headers.length; i++) {
+      if (normHead_(headers[i]) === names[j]) return i;
     }
   }
   return -1;

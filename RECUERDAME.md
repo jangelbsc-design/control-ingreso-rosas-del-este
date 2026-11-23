@@ -62,7 +62,7 @@ Todo se configura en **`js/config.js`**:
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado, ahora recarga sola cada 5 min) | `5` |
 | `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
-| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `26` |
+| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `27` |
 | `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/QR pago expensas.jpeg` |
 
 ### 3.3 Columnas de la hoja
@@ -660,16 +660,29 @@ botón dará `Acción inválida: updatePago`. Si sale `Illegal return statement`
 es que el pegado quedó a medias: borrar todo y pegar el archivo completo.
 Instructivo completo en `INSTRUCTIVO-PAGOS.md`.
 
-**v26 — cambio de URL del web app.** El proyecto de Apps Script terminó en
-un documento distinto al de la hoja, pero eso no importa: el código usa
-`openByUrl` con el ID fijo en la línea 5. Se creó un deploy nuevo y su URL
-se registró en `BITACORA_URL` (v26):
-`https://script.google.com/macros/s/AKfycbwtD4oVwzNlF59A-UKvuYvZ8EQD0wLxoR0fO9B-xu_qmp3rPn9I/exec`.
-Verificado en vivo: `?action=list` devuelve la bitácora real y un POST con
-`block` vacío responde `Falta el manzano` (confirma que `updatePago` está
-desplegado, sin escribir nada). Si en el futuro se regenera el deploy,
-cambiar la URL acá **y subir `APP_VERSION` + los `?v=`**, porque si no el
-Service Worker sigue sirviendo el `config.js` viejo con la URL anterior.
+**v26 → v27 — web app en un proyecto INDEPENDIENTE.** La v26 estaba atada a
+un documento de Sheets y, cuando ese documento se movió/desapareció, el
+endpoint empezó a devolver `HTTP 404` con la página «Lo sentimos, el archivo
+que has solicitado no existe». Por eso el script se mudó a un proyecto
+**independiente** en `script.google.com` (`ROSAS - BITACORA OFICIAL`), **no
+vinculado a ninguna hoja**. Sigue funcionando porque usa `openByUrl` con el ID
+fijo en la línea 5 (`1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO`), así que el
+documento contenedor no importa. URL registrada en `BITACORA_URL` (v27):
+
+`https://script.google.com/macros/s/AKfycbxv4KBZdUdgCuKHrmT2yvzYIuGrrYFaC7g7gS54sgQK7P2crEmPP_OHG5zcERdQipdApg/exec`
+
+Verificado en vivo: `?action=diag` devuelve JSON con el documento y las dos
+pestañas, y `?action=list` devuelve la bitácora real. Si en el futuro se
+regenera el deploy, cambiar la URL acá **y subir `APP_VERSION` + los `?v=`**,
+porque si no el Service Worker sigue sirviendo el `config.js` viejo con la
+URL anterior.
+
+**Ajuste v27:** `colByNames_()` ahora recorre **primero los nombres pedidos** y
+después las columnas. Antes, en `Hoja1`, `SITUACION` (columna E) le ganaba a
+`ESTADO` (columna M) porque aparece antes en la hoja; la escritura real ya
+usaba una lista sin `situacion`, pero el diagnóstico mostraba el índice
+equivocado. Dato medido en la hoja real: `PROPIETARIOS` tiene encabezado en la
+fila **1** y `Hoja1` en la fila **2** (una fila vacía arriba).
 
 Verificación usada: `node --check` en los 4 archivos JS + harness con mocks
 de Apps Script, **21/21 pruebas OK** (incluye pago, deshacer, año inválido,
