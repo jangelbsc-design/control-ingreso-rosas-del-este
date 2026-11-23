@@ -267,6 +267,10 @@ button { font-family: inherit; cursor: pointer; }
   width: 100%; margin-top: 10px;
   background: var(--verde-claro); color: var(--verde-osc);
 }
+.btn-pago {
+  width: 100%; margin: 10px 0 4px;
+  background: var(--verde); color: var(--blanco);
+}
 .btn-outline-red { background: transparent; border: 1.5px solid var(--rojo); color: var(--rojo-osc); }
 .w-full { width: 100%; }
 
@@ -337,6 +341,13 @@ button { font-family: inherit; cursor: pointer; }
   padding: 13px 14px; font-size: 16px; background: var(--blanco); outline: 0;
 }
 .field input:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(14, 122, 61, .15); }
+.field select {
+  border: 1.5px solid var(--gris-linea); border-radius: 12px;
+  padding: 13px 14px; font-size: 16px; background: var(--blanco); outline: 0;
+  color: var(--negro);
+}
+.field select:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(14, 122, 61, .15); }
+#pagoOverlay .field { margin-bottom: 12px; }
 
 /* ---------------- Navegación inferior ---------------- */
 #bottomNav {

@@ -62,7 +62,7 @@ Todo se configura en **`js/config.js`**:
 | `COUNTRY_CODE` | Prefijo del país para llamadas/WhatsApp (Bolivia = 591) | `591` |
 | `AUTO_REFRESH_MIN` | Minutos entre recargas automáticas (0 = desactivado, ahora recarga sola cada 5 min) | `5` |
 | `BITACORA_URL` | URL del web app de Apps Script (sección 10) | la `/exec` configurada |
-| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `24` |
+| `APP_VERSION` | Número de versión visible en la Bitácora (útil para detectar teléfonos desactualizados) | `25` |
 | `QR_IMAGE` | Ruta de la imagen del QR de pago que se adjunta a los recordatorios | `imágenes/QR pago expensas.jpeg` |
 
 ### 3.3 Columnas de la hoja
@@ -622,4 +622,51 @@ las 4 vistas abren**, `node --check js/app.js` OK y sin mojibake.
 
 ---
 
-*Última actualización: noviembre 2026 (v24: **selector de piscina solo para Admin**, con guardado en Google Sheets que **revierte si falla** y **caché offline actualizado solo al confirmar**; el buscador **conserva el filtro** al cambiar manillas — sección 3.6. Antes: v23: **la tarjeta ya no dice "2 placas"**, solo "Toca para ver ficha"; las placas siguen visibles como plaquitas — sección 3.3.1. Antes: v22 con **el dato de piscina literal de la hoja** — sección 3.6, v21 con el chip de piscina, tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4, con el **bug corregido que impedía que el mapa se mostrara** (v17)). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+## 14. Registrar pago desde la app (v25, solo Admin)
+
+Problema que resuelve: si un vecino paga en efectivo y el admin no tiene a
+mano la hoja de Google, antes no había forma de cambiar su estado. Ahora
+desde la **ficha del vecino** aparece el botón **«Registrar pago»** (solo
+Admin). Se elige **mes** y **año**, y con un solo toque se escriben en la
+hoja, en una sola llamada:
+
+| Pestaña | Celda | Valor |
+|---|---|---|
+| `PROPIETARIOS` | `ESTADO` | `VIGENTE` |
+| `Hoja1` | `CANCELADO` | el mes elegido (ej. `Noviembre`) |
+| `Hoja1` | `GESTIÓN` | el año elegido (ej. `2026`) |
+| `Hoja1` | `ESTADO` | `VIGENTE` |
+
+La ficha muestra enseguida `ACCESO AUTORIZADO` y el aviso `Cancelado:
+Noviembre 2026`. Si Google falla, **todo se revierte** y sale un aviso de
+error. El guardia ve el cambio al recargar o en hasta 5 minutos (recarga
+automática).
+
+El mismo panel tiene **«Marcar en mora (deshacer)»** por si se registró un
+pago por error: cambia el estado a `MOROSO` en las dos pestañas pero **no
+toca el mes pagado**.
+
+Cada operación queda registrada en la **bitácora** con `ORIGEN = PAGO`, la
+nota (`Pago registrado: Noviembre 2026 · por <usuario>` o `Marcado en mora`)
+y la hora del dispositivo.
+
+**Importante:** el cambio va en `server/Bitacora.gs` (nueva acción
+`updatePago`). Ese archivo **NO se sube con git**: hay que abrir el proyecto
+de Apps Script, reemplazar todo el código por el contenido de
+`server/Bitacora.gs`, guardar y hacer **Nueva implementación** (misma URL
+`/exec`, ejecutar como *Yo*, acceso *Cualquier persona*). Sin ese paso el
+botón dará `Acción inválida: updatePago`. Instructivo completo en
+`INSTRUCTIVO-PAGOS.md`.
+
+Verificación usada: `node --check` en los 4 archivos JS + harness con mocks
+de Apps Script, **21/21 pruebas OK** (incluye pago, deshacer, año inválido,
+manzano inexistente, celda con fórmula, y regresión de `updatePool` y
+bitácora).
+
+---
+
+*Última actualización: noviembre 2026 (v25: **registrar pago / mes pagado
+desde la ficha, solo Admin**, escribe `PROPIETARIOS.ESTADO`,
+`Hoja1.CANCELADO`, `Hoja1.GESTIÓN` y `Hoja1.ESTADO` en una sola llamada, con
+reversión si falla, deshacer a mora y auditoría en la bitácora — sección 14.
+Antes: v24: **selector de piscina solo para Admin**, con guardado en Google Sheets que **revierte si falla** y **caché offline actualizado solo al confirmar**; el buscador **conserva el filtro** al cambiar manillas — sección 3.6. Antes: v23: **la tarjeta ya no dice "2 placas"**, solo "Toca para ver ficha"; las placas siguen visibles como plaquitas — sección 3.3.1. Antes: v22 con **el dato de piscina literal de la hoja** — sección 3.6, v21 con el chip de piscina, tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4, con el **bug corregido que impedía que el mapa se mostrara** (v17)). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*

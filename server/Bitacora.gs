@@ -122,6 +122,52 @@ function outJson_(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/* ---------- Utilidades para registrar pagos ---------- */
+
+/* Encabezado normalizado: sin tildes, sin espacios, minúsculas.
+   Así "GESTIÓN" se reconoce como "gestion". */
+function normHead_(s) {
+  return String(s == null ? "" : s).toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+
+/* Primera columna cuyo encabezado coincide exactamente con alguno
+   de los nombres dados (ya normalizados). */
+function colByNames_(headers, names) {
+  for (var i = 0; i < headers.length; i++) {
+    var h = normHead_(headers[i]);
+    for (var j = 0; j < names.length; j++) {
+      if (h === names[j]) return i;
+    }
+  }
+  return -1;
+}
+
+/* Igual que claveManzano() en la app: solo números unidos por "-".
+   Evita confundir "M2 - 120" con "M21 - 20". */
+function claveMz_(v) {
+  var n = String(v == null ? "" : v).match(/\d+/g);
+  return n ? n.join("-") : "";
+}
+
+/* Todas las filas (índice 0-based dentro de data) con ese manzano. */
+function filasPorMz_(data, colMz, clave) {
+  var out = [];
+  for (var i = 1; i < data.length; i++) {
+    if (clave && claveMz_(data[i][colMz]) === clave) out.push(i);
+  }
+  return out;
+}
+
+/* Nunca sobrescribe una celda con fórmula. */
+function setCellSafe_(sh, row, col, val) {
+  if (row < 1 || col < 0) return false;
+  var cell = sh.getRange(row, col + 1);
+  if (String(cell.getFormula() || "").charAt(0) === "=") return false;
+  cell.setValue(val);
+  return true;
+}
+
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || "list";
   if (action === "list") {
@@ -227,6 +273,89 @@ function doPost(e) {
       } else {
         return outJson_({ ok: false, error: "Vecino no encontrado en la hoja" });
       }
+    }
+
+    /* REGISTRAR PAGO: escribe el mes pagado y el estado en las DOS
+       pestañas de una sola vez. La app lo llama con estado VIGENTE
+       (pago) o MOROSO (deshacer). Nunca toca una celda con fórmula. */
+    if (action === "updatePago") {
+      var block = String(body.block || "").trim();
+      var estado = String(body.estado || "VIGENTE").trim().toUpperCase();
+      var mes = String(body.month || "").trim();
+      var anio = String(body.year || "").trim();
+      var clave = claveMz_(block);
+
+      if (!clave) return outJson_({ ok: false, error: "Falta el manzano" });
+      if (estado !== "VIGENTE" && estado !== "MOROSO") {
+        return outJson_({ ok: false, error: "Estado inválido" });
+      }
+      if (estado === "VIGENTE" && (!mes || !/^\d{4}$/.test(anio))) {
+        return outJson_({ ok: false, error: "Faltan mes o año" });
+      }
+
+      var ss = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
+      var shVec = ss.getSheetByName(String(body.sheetVecinos || "PROPIETARIOS"));
+      var shCan = ss.getSheetByName(String(body.sheetCancelado || "Hoja1"));
+      if (!shVec || !shCan) {
+        return outJson_({ ok: false, error: "No se encuentran las pestañas PROPIETARIOS u Hoja1" });
+      }
+
+      var dVec = shVec.getDataRange().getValues();
+      var dCan = shCan.getDataRange().getValues();
+      var hVec = dVec[0] || [], hCan = dCan[0] || [];
+      if (dVec.length < 2 || dCan.length < 2) {
+        return outJson_({ ok: false, error: "Las hojas no tienen datos" });
+      }
+
+      var mzVec = colByNames_(hVec, ["manzano", "mazano", "bloque"]);
+      var esVec = colByNames_(hVec, ["estado", "moroso", "situacionpago", "situacion"]);
+      var mzCan = colByNames_(hCan, ["manzano", "mazano", "bloque"]);
+      var esCan = colByNames_(hCan, ["estado", "moroso", "situacionpago"]);
+      var txtCan = colByNames_(hCan, ["cancelado"]);
+      var anioCan = colByNames_(hCan, ["gestion", "anio", "year"]);
+
+      var filasVec = mzVec >= 0 ? filasPorMz_(dVec, mzVec, clave) : [];
+      var filasCan = mzCan >= 0 ? filasPorMz_(dCan, mzCan, clave) : [];
+      if (filasVec.length !== 1 || filasCan.length !== 1) {
+        return outJson_({ ok: false, error: "Manzano no encontrado o duplicado (" +
+          filasVec.length + "/" + filasCan.length + ")" });
+      }
+      if (esVec < 0 || esCan < 0) {
+        return outJson_({ ok: false, error: "Falta la columna ESTADO en alguna pestaña" });
+      }
+      if (estado === "VIGENTE" && (txtCan < 0 || anioCan < 0)) {
+        return outJson_({ ok: false, error: "Faltan las columnas CANCELADO/GESTIÓN" });
+      }
+
+      /* Prevalidar fórmulas ANTES de escribir: si alguna celda destino
+         es fórmula, no se modifica nada. */
+      var chk = [
+        [shVec, filasVec[0] + 1, esVec],
+        [shCan, filasCan[0] + 1, esCan]
+      ];
+      if (estado === "VIGENTE") {
+        chk.push([shCan, filasCan[0] + 1, txtCan]);
+        chk.push([shCan, filasCan[0] + 1, anioCan]);
+      }
+      for (var q = 0; q < chk.length; q++) {
+        var c = chk[q];
+        if (String(c[0].getRange(c[1], c[2] + 1).getFormula() || "").charAt(0) === "=") {
+          return outJson_({ ok: false, error: "Una celda destino tiene fórmula; no se escribió nada" });
+        }
+      }
+
+      if (estado === "VIGENTE") {
+        if (!setCellSafe_(shCan, filasCan[0] + 1, txtCan, mes)) {
+          return outJson_({ ok: false, error: "No se pudo escribir CANCELADO" });
+        }
+        if (!setCellSafe_(shCan, filasCan[0] + 1, anioCan, anio)) {
+          return outJson_({ ok: false, error: "No se pudo escribir GESTIÓN" });
+        }
+      }
+      setCellSafe_(shCan, filasCan[0] + 1, esCan, estado);
+      setCellSafe_(shVec, filasVec[0] + 1, esVec, estado);
+
+      return outJson_({ ok: true, block: block, estado: estado, mes: mes, anio: anio });
     }
 
     return outJson_({ ok: false, error: "Acción inválida: " + action });

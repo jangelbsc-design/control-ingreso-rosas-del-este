@@ -35,6 +35,7 @@ function onBackPressed() {
   // 1) Cerrar el overlay más profundo que esté abierto.
   if (!$("loginOverlay").hidden) { closeLogin(); return; }
   if (!$("cobranzaOverlay").hidden) { closeCobranza(); return; }
+  if (!$("pagoOverlay").hidden) { closePago(); return; }
   if (!$("phoneSheet").hidden) { closePhoneSheet(); return; }
   if (!$("detailOverlay").hidden) { closeDetail(); return; }
 
@@ -905,6 +906,8 @@ function openDetail(r) {
   };
 
   var admin = isAdmin();
+  $("dtPagar").hidden = !admin;
+  $("dtPagar").onclick = function () { openPago(r); };
   $("dtCobrar").hidden = !(admin && (r.status === "mora" || r.status === "vigente"));
   $("dtCobrar").className = "btn " + (r.status === "mora" ? "btn-cobranza" : "btn-cobranza-vig");
   $("dtCobrarLabel").textContent = r.status === "mora" ? "Enviar recordatorio de cobranza" : "Recordatorio de pago";
@@ -1228,7 +1231,7 @@ function addBitacora(data) {
   list.unshift(entry);
   setBitacora(list);
   renderBitacora();
-  toast("Ingreso registrado " + st.time);
+  if (!data.quiet) toast("Ingreso registrado " + st.time);
   var q = getPending();
   q.push(entry);
   setPending(q);
@@ -1487,7 +1490,7 @@ function renderBitacora(filterToday) {
     if (e.via) {
       var v = document.createElement("span");
       v.className = "bit-via";
-      v.textContent = e.via === "directorio" ? "desde ficha" : "manual";
+      v.textContent = e.via === "directorio" ? "desde ficha" : e.via === "PAGO" ? "pago registrado" : "manual";
       foot.appendChild(v);
     }
     item.appendChild(foot);
@@ -1853,6 +1856,7 @@ function init() {
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
       if (!$("phoneSheet").hidden) { closePhoneSheet(); return; }
+      if (!$("pagoOverlay").hidden) { closePago(); return; }
       if (!$("detailOverlay").hidden) closeDetail();
     }
   });
@@ -2197,6 +2201,148 @@ function actualizarPiscina(r, newVal) {
     }
   }).catch(function(e) {
     revertirPiscina(r, previo);
+    toast("Error de red al guardar");
+  });
+}
+
+/* ================================================================
+   REGISTRAR PAGO — cambiar el mes pagado y el estado desde la app
+   ================================================================
+   Solo Admin. Llama a la acción `updatePago` de Bitacora.gs, que
+   escribe en UNA sola llamada:
+     - PROPIETARIOS.ESTADO       -> VIGENTE o MOROSO
+     - Hoja1.CANCELADO / GESTIÓN -> mes y año (solo al registrar pago)
+     - Hoja1.ESTADO              -> VIGENTE o MOROSO
+   El guardia ve el cambio al recargar (o en hasta 5 min por la
+   recarga automática). Si Google falla, se revierte todo.
+   El "Marcar en mora" es el deshacer: NO toca el mes pagado. */
+var PAGO_MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+function openPago(r) {
+  if (!r || !isAdmin()) return;
+  if (!bitacoraURL()) { toast("No hay URL de servidor configurada para guardar."); return; }
+
+  var sel = $("pagoMes");
+  if (sel && !sel.options.length) {
+    for (var i = 0; i < PAGO_MESES.length; i++) {
+      var op = document.createElement("option");
+      op.value = PAGO_MESES[i];
+      op.textContent = PAGO_MESES[i];
+      sel.appendChild(op);
+    }
+  }
+  var d = new Date();
+  if (sel) sel.selectedIndex = d.getMonth();
+  var anio = $("pagoAnio");
+  if (anio) anio.value = String(d.getFullYear());
+
+  var who = $("pagoRecip");
+  if (who) who.textContent = (r.block ? r.block + " · " : "") + (r.ownerName || "Vecino");
+
+  var ov = $("pagoOverlay");
+  ov.hidden = false;
+  document.body.classList.add("locked");
+
+  $("pagoGuardar").onclick = function () {
+    var mes = $("pagoMes").value;
+    var year = String($("pagoAnio").value || "").trim();
+    if (PAGO_MESES.indexOf(mes) < 0 || !/^\d{4}$/.test(year)) {
+      toast("Elige un mes y un año de 4 dígitos");
+      return;
+    }
+    registrarPago(r, "VIGENTE", mes, year);
+  };
+
+  $("pagoMora").onclick = function () { registrarPago(r, "MOROSO", "", ""); };
+  $("pagoCancel").onclick = closePago;
+  ov.onclick = function (e) { if (e.target === this) closePago(); };
+}
+
+function closePago() {
+  var ov = $("pagoOverlay");
+  if (!ov) return;
+  ov.hidden = true;
+  document.body.classList.remove("locked");
+}
+
+function revertirPago(r, previo) {
+  if (!r || !previo) return;
+  r.status = previo.status;
+  r.statusRaw = previo.statusRaw;
+  r.cancelado = previo.cancelado;
+  r.searchText = previo.searchText;
+  if (state.selected === r) openDetail(r);
+  applyFilters();
+}
+
+function registrarPago(r, estado, mes, anio) {
+  if (!r) return;
+  if (!isAdmin()) { toast("Solo administración puede registrar pagos."); return; }
+  var url = bitacoraURL();
+  if (!url) { toast("No hay URL de servidor configurada para guardar."); return; }
+
+  var previo = {
+    status: r.status, statusRaw: r.statusRaw,
+    cancelado: r.cancelado || "", searchText: r.searchText
+  };
+  var textoMes = mes && anio ? mes + " " + anio : "";
+  var esVigente = estado === "VIGENTE";
+
+  /* Cambio optimista: el resultado se ve al instante en la ficha. */
+  r.status = esVigente ? "vigente" : "mora";
+  r.statusRaw = estado;
+  if (esVigente) r.cancelado = textoMes;   /* en mora NO se toca el mes */
+  r.searchText = normalizeText([r.block, r.ownerName,
+    r.phones.join(" "), r.plates.join(" "), statusLabel(r.statusRaw)].join(" "));
+
+  closePago();
+  openDetail(r);
+  applyFilters();
+  toast("Guardando en Google Sheets...");
+
+  var user = (getSession() || {}).user || "";
+  fetch(url, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "updatePago",
+      block: r.block,
+      estado: estado,
+      month: esVigente ? mes : "",
+      year: esVigente ? anio : "",
+      sheetVecinos: APP_CONFIG.SHEET_NAME || "PROPIETARIOS",
+      sheetCancelado: APP_CONFIG.SHEET_CANCELADO || "Hoja1",
+      user: user
+    }),
+    cache: "no-store"
+  }).then(function (res) {
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    return res.json();
+  }).then(function (j) {
+    if (!j || !j.ok) {
+      revertirPago(r, previo);
+      toast("Error al guardar: " + ((j && j.error) || "Desconocido"));
+      return;
+    }
+    /* La caché offline solo se toca cuando Google confirmó. */
+    if (esVigente) {
+      try {
+        var mapa = cacheCancelado() || {};
+        mapa[claveManzano(r.block)] = textoMes;
+        localStorage.setItem(CANCELADO_KEY, JSON.stringify(mapa));
+      } catch (e) { /* sin espacio */ }
+    }
+    cacheRows(state.rows);
+    addBitacora({
+      owner: r.ownerName || "", block: r.block || "", name: "", plate: "",
+      note: (esVigente ? "Pago registrado: " + textoMes : "Marcado en mora") +
+            " · por " + (user || "Admin"),
+      via: "PAGO", quiet: true
+    });
+    openDetail(r);
+    toast("Guardado en Google Sheets ✓");
+  }).catch(function (e) {
+    revertirPago(r, previo);
     toast("Error de red al guardar");
   });
 }
