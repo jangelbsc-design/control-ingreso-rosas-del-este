@@ -622,7 +622,7 @@ las 4 vistas abren**, `node --check js/app.js` OK y sin mojibake.
 
 ---
 
-## 14. Registrar pago desde la app (v25, solo Admin)
+## 14. Registrar pago desde la app (v25–v27, solo Admin) — PROBADO EN PRODUCCIÓN
 
 Problema que resuelve: si un vecino paga en efectivo y el admin no tiene a
 mano la hoja de Google, antes no había forma de cambiar su estado. Ahora
@@ -697,10 +697,25 @@ Ahora `filaEncabezado_()` busca la fila que contiene `MAZANO`/`MANZANO` en las
 primeras 15 filas y `filasPorMz_()` empieza a buscar desde ahí. El diagnóstico
 `?action=diag` devuelve además `filaEncabezado` por pestaña.
 
+**Probado en producción el 23/11/2026 ✅.** Se registró un pago desde la ficha
+y quedó operativo: la app mostró `ACCESO AUTORIZADO`, el aviso con el mes
+pagado y el toast «Guardado en Google Sheets ✓», y la hoja se actualizó en
+las dos pestañas. Valores que debe devolver `?action=diag` en el deploy sano:
+
+| Pestaña | `filaEncabezado` | `mz` | `estado` | `cancelado` | `gestion` | `filas2240` |
+|---|---|---|---|---|---|---|
+| `PROPIETARIOS` | 1 | 0 | 3 | — | — | `[57]` |
+| `Hoja1` | 2 | 2 | 12 | 10 | 11 | `[62]` |
+
+Si `mz` sale `-1`, `cancelado`/`gestion` salen `-1`, o `estado` sale `4`
+(columna `SITUACION` en vez de `ESTADO`), el deploy está viejo: volver a pegar
+`server/Codigo-para-pegar.gs` y crear una **nueva versión** de la
+implementación.
+
 ---
 
-*Última actualización: noviembre 2026 (v25: **registrar pago / mes pagado
-desde la ficha, solo Admin**, escribe `PROPIETARIOS.ESTADO`,
+*Última actualización: noviembre 2026 (v27: **registrar pago / mes pagado
+desde la ficha, solo Admin — probado en producción el 23/11/2026 ✅**, escribe `PROPIETARIOS.ESTADO`,
 `Hoja1.CANCELADO`, `Hoja1.GESTIÓN` y `Hoja1.ESTADO` en una sola llamada, con
 reversión si falla, deshacer a mora y auditoría en la bitácora — sección 14.
-Antes: v24: **selector de piscina solo para Admin**, con guardado en Google Sheets que **revierte si falla** y **caché offline actualizado solo al confirmar**; el buscador **conserva el filtro** al cambiar manillas — sección 3.6. Antes: v23: **la tarjeta ya no dice "2 placas"**, solo "Toca para ver ficha"; las placas siguen visibles como plaquitas — sección 3.3.1. Antes: v22 con **el dato de piscina literal de la hoja** — sección 3.6, v21 con el chip de piscina, tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4, con el **bug corregido que impedía que el mapa se mostrara** (v17)). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
+Antes: v26 → v27: el web app se mudó a un proyecto **independiente** de Apps Script (`ROSAS - BITACORA OFICIAL`) porque el anterior estaba atado a un documento de Sheets y al desaparecer ese documento el endpoint devolvió HTTP 404; se agregó el diagnóstico `?action=diag` y se corrigió la **fila de encabezados de `Hoja1`** (tenía una fila vacía arriba) — sección 14. Antes: v24: **selector de piscina solo para Admin**, con guardado en Google Sheets que **revierte si falla** y **caché offline actualizado solo al confirmar**; el buscador **conserva el filtro** al cambiar manillas — sección 3.6. Antes: v23: **la tarjeta ya no dice "2 placas"**, solo "Toca para ver ficha"; las placas siguen visibles como plaquitas — sección 3.3.1. Antes: v22 con **el dato de piscina literal de la hoja** — sección 3.6, v21 con el chip de piscina, tarjetas "Manzano X - Lote Y", dos botones abajo Registro/Bitácora, números múltiples por casilla, despliegue automático con Actions, **bitácora sincronizada entre dispositivos** con el web app de Apps Script — sección 10, **login obligatorio para usar la app**, sesión guardada en cada dispositivo, roles Admin/Ingreso y **recordatorios de cobranza (mora) y de pago (vigente) con QR por WhatsApp** — sección 11, **borrado de registros de la bitácora solo para el Admin** — sección 11, **aviso "Sin conexión" con botón Reintentar cuando no hay copia local** — sección 4, **borrados pendientes para que un registro borrado sin internet no reaparezca al sincronizar** — sección 10, **ícono y pantalla de inicio con el logo de la urbanización (PNG en `icons/`)** y **botón "Instalar" en la barra superior (solo Android/Chrome)** — sección 5, **botón atrás del teléfono con "doble atrás para salir"** — sección 12, **bitácora agrupada por día con encabezado negro** — sección 1, y **mini mapa de Google en la ficha con la columna UBICACIÓN** — sección 3.4, con el **bug corregido que impedía que el mapa se mostrara** (v17)). El tutorial de GitHub también referencia el archivo `README.md` del repositorio.*
