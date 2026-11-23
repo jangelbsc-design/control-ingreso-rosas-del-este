@@ -38,9 +38,19 @@ el mes pagado**. Cada acción queda en la bitácora con origen `PAGO`.
    - Quién puede acceder: **Cualquier persona**
    - Clic en **Implementar** y autorizá (Avanzado → Ir a… → Permitir).
 8. Copiá la URL que termina en **`/exec`** de la *Aplicación web* (NO la de
-   *Prueba de desarrollo*). Debe ser **exactamente igual** a la que ya está
-   en `js/config.js` → `BITACORA_URL`. Si te sale una URL distinta, pegá la
-   nueva en `BITACORA_URL` y avisá para hacer otro `git push`.
+   *Prueba de desarrollo*). Debe ser **exactamente igual** a la que está en
+   `js/config.js` → `BITACORA_URL`. Si te sale una URL distinta, pegá la
+   nueva en `BITACORA_URL`, subí `APP_VERSION` y los `?v=` de `index.html` y
+   `sw.js`, y hacé `git push` (si no, el Service Worker sigue sirviendo el
+   `config.js` viejo con la URL anterior).
+
+> **URL actual (v26):**
+> `https://script.google.com/macros/s/AKfycbwtD4oVwzNlF59A-UKvuYvZ8EQD0wLxoR0fO9B-xu_qmp3rPn9I/exec`
+>
+> El script puede estar pegado en **cualquier documento** de Sheets: el
+> código usa `openByUrl` con el ID fijo en la línea 5, así que el documento
+> contenedor no importa. Lo que sí importa es que esa línea diga
+> `1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO`.
 
 > Si hacés una implementación **nueva** sin borrar la anterior, Google puede
 > darte una URL distinta. Para conservar la misma URL, en **Implementar →

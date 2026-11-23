@@ -61,11 +61,11 @@ var APP_CONFIG = {
      sincronización). Ejemplo completo:
      BITACORA_URL: "https://script.google.com/macros/s/XXXXXXXX/exec"
      ============================================================ */
-  BITACORA_URL: "https://script.google.com/macros/s/AKfycbzOfFgIHrSBJgYCAjAeI-FwlTFadtBq3jYLfTaWa69-426LmsDj2k0AFwx3XP4UQO4D/exec",
+  BITACORA_URL: "https://script.google.com/macros/s/AKfycbwtD4oVwzNlF59A-UKvuYvZ8EQD0wLxoR0fO9B-xu_qmp3rPn9WL0hfJseB5OzPn9I/exec",
 
   /* Versión visible de la app (ajústala cada vez que cambies algo).
      Sirve para comprobar de qué versión está cada teléfono. */
-  APP_VERSION: "25",
+  APP_VERSION: "26",
 
   /* Imagen del QR de pago que se adjunta a los recordatorios
      (cobranza para morosos y recordatorio para vigentes).
