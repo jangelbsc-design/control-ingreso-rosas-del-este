@@ -31,6 +31,14 @@ el mes pagado**. Cada acción queda en la bitácora con origen `PAGO`.
    de instrucciones, para que no se rompa al copiar).
 5. **Antes de pegar, confirmá que el editor quedó vacío** (Ctrl+A + Supr).
    Pegá todo con **Ctrl+V**. Guardá y mirá que no haya errores en rojo.
+6. **Implementar → Administrar implementaciones → lápiz (Editar) →
+   Versión: «Nueva versión» → Implementar.** Este paso es OBLIGATORIO:
+   guardar no cambia lo que responde la URL `/exec`. Si solo guardás, la app
+   sigue hablando con el código viejo.
+
+> **Diagnóstico rápido:** abrí en el navegador
+> `<TU_URL>/exec?action=diag`. Si devuelve JSON con `"ok":true`, el código
+> nuevo está activo. Si dice `Acción inválida: diag`, el deploy es viejo.
 6. **Guardá** (Ctrl+S / ícono de disquete).
 7. **Implementar → Nueva implementación**:
    - Tipo: **Aplicación web**

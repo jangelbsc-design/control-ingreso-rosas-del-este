@@ -1,5 +1,6 @@
 /* Apps Script - Control de Ingreso - Rosas del Este - v25
    Reemplaza TODO el contenido de Codigo.gs con este archivo.
+   Incluye el diagnostico: ?action=diag
 */
 
 var SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1YdYeE6JLRlP5FsxI9TprBFiQ0lbYEXUO/edit";
@@ -141,10 +142,54 @@ function setCellSafe_(sh, row, col, val) {
   return true;
 }
 
+/* Diagnóstico de SOLO LECTURA para la acción updatePago.
+   Devuelve qué documento y qué pestañas ve el script, qué columnas
+   detecta y si encuentra el manzano 22-40. No escribe nada. */
+function diagPago_() {
+  var out = { ok: true, url: SPREADSHEET_URL };
+  try {
+    var ss = SpreadsheetApp.openByUrl(SPREADSHEET_URL);
+    out.doc = ss.getName();
+    out.docId = ss.getId();
+    out.tabs = ss.getSheets().map(function (s) { return s.getName(); });
+
+    ["PROPIETARIOS", "Hoja1"].forEach(function (name) {
+      var sh = ss.getSheetByName(name);
+      if (!sh) { out[name] = { existe: false }; return; }
+      var d = sh.getDataRange().getValues();
+      var head = d[0] || [];
+      var info = {
+        existe: true,
+        filas: d.length,
+        columnas: head.length,
+        headers: head.map(function (h) { return String(h == null ? "" : h); }),
+        mz: colByNames_(head, ["manzano", "mazano", "bloque"]),
+        estado: colByNames_(head, ["estado", "moroso", "situacionpago", "situacion"]),
+        cancelado: colByNames_(head, ["cancelado"]),
+        gestion: colByNames_(head, ["gestion", "anio", "year"])
+      };
+      if (info.mz >= 0) {
+        info.filas2240 = filasPorMz_(d, info.mz, "22-40");
+        info.muestraMz = d.slice(1, 6).map(function (r) {
+          return String(r[info.mz] == null ? "" : r[info.mz]);
+        });
+      }
+      out[name] = info;
+    });
+  } catch (err) {
+    out.ok = false;
+    out.error = String(err);
+  }
+  return out;
+}
+
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || "list";
   if (action === "list") {
     return outJson_(readRows_());
+  }
+  if (action === "diag") {
+    return outJson_(diagPago_());
   }
   return outJson_({ ok: false, error: "Acción inválida: " + action });
 }
