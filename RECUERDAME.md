@@ -674,7 +674,15 @@ Service Worker sigue sirviendo el `config.js` viejo con la URL anterior.
 Verificación usada: `node --check` en los 4 archivos JS + harness con mocks
 de Apps Script, **21/21 pruebas OK** (incluye pago, deshacer, año inválido,
 manzano inexistente, celda con fórmula, y regresión de `updatePool` y
-bitácora).
+bitácora), más un segundo harness con **11/11** sobre el caso real de
+`Hoja1` con filas vacías arriba.
+
+**Ajuste v25.1 (23/11/2026):** `Hoja1` tenía **filas vacías u ocultas arriba**
+de los encabezados (el script veía `headers` todos vacíos y `mz = -1`, por eso
+respondía `Manzano no encontrado o duplicado (x/0)` para cualquier vecino).
+Ahora `filaEncabezado_()` busca la fila que contiene `MAZANO`/`MANZANO` en las
+primeras 15 filas y `filasPorMz_()` empieza a buscar desde ahí. El diagnóstico
+`?action=diag` devuelve además `filaEncabezado` por pestaña.
 
 ---
 

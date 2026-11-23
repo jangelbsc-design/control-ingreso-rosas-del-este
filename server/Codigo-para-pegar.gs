@@ -124,13 +124,30 @@ function claveMz_(v) {
   return n ? n.join("-") : "";
 }
 
-/* Todas las filas (índice 0-based dentro de data) con ese manzano. */
-function filasPorMz_(data, colMz, clave) {
+/* Todas las filas (índice 0-based dentro de data) con ese manzano.
+   `desde` es el índice de la fila de encabezados; se empieza a buscar
+   en la siguiente. Así funciona aunque arriba haya filas vacías. */
+function filasPorMz_(data, colMz, clave, desde) {
   var out = [];
-  for (var i = 1; i < data.length; i++) {
+  var inicio = (typeof desde === "number" ? desde : 0) + 1;
+  for (var i = inicio; i < data.length; i++) {
     if (clave && claveMz_(data[i][colMz]) === clave) out.push(i);
   }
   return out;
+}
+
+/* Busca la fila de encabezados en las primeras 15 filas: la primera
+   que tenga una columna de manzano. Devuelve { idx, headers }.
+   Necesario porque en Hoja1 hay filas ocultas/vacías arriba. */
+function filaEncabezado_(data) {
+  var max = Math.min(data.length, 15);
+  for (var i = 0; i < max; i++) {
+    var head = data[i] || [];
+    if (colByNames_(head, ["manzano", "mazano", "bloque"]) >= 0) {
+      return { idx: i, headers: head };
+    }
+  }
+  return { idx: 0, headers: data[0] || [] };
 }
 
 /* Nunca sobrescribe una celda con fórmula. */
@@ -157,11 +174,13 @@ function diagPago_() {
       var sh = ss.getSheetByName(name);
       if (!sh) { out[name] = { existe: false }; return; }
       var d = sh.getDataRange().getValues();
-      var head = d[0] || [];
+      var enc = filaEncabezado_(d);
+      var head = enc.headers;
       var info = {
         existe: true,
         filas: d.length,
         columnas: head.length,
+        filaEncabezado: enc.idx + 1,
         headers: head.map(function (h) { return String(h == null ? "" : h); }),
         mz: colByNames_(head, ["manzano", "mazano", "bloque"]),
         estado: colByNames_(head, ["estado", "moroso", "situacionpago", "situacion"]),
@@ -169,8 +188,8 @@ function diagPago_() {
         gestion: colByNames_(head, ["gestion", "anio", "year"])
       };
       if (info.mz >= 0) {
-        info.filas2240 = filasPorMz_(d, info.mz, "22-40");
-        info.muestraMz = d.slice(1, 6).map(function (r) {
+        info.filas2240 = filasPorMz_(d, info.mz, "22-40", enc.idx);
+        info.muestraMz = d.slice(enc.idx + 1, enc.idx + 6).map(function (r) {
           return String(r[info.mz] == null ? "" : r[info.mz]);
         });
       }
@@ -320,10 +339,12 @@ function doPost(e) {
 
       var dVec = shVec.getDataRange().getValues();
       var dCan = shCan.getDataRange().getValues();
-      var hVec = dVec[0] || [], hCan = dCan[0] || [];
       if (dVec.length < 2 || dCan.length < 2) {
         return outJson_({ ok: false, error: "Las hojas no tienen datos" });
       }
+      var encVec = filaEncabezado_(dVec);
+      var encCan = filaEncabezado_(dCan);
+      var hVec = encVec.headers, hCan = encCan.headers;
 
       var mzVec = colByNames_(hVec, ["manzano", "mazano", "bloque"]);
       var esVec = colByNames_(hVec, ["estado", "moroso", "situacionpago", "situacion"]);
@@ -332,8 +353,8 @@ function doPost(e) {
       var txtCan = colByNames_(hCan, ["cancelado"]);
       var anioCan = colByNames_(hCan, ["gestion", "anio", "year"]);
 
-      var filasVec = mzVec >= 0 ? filasPorMz_(dVec, mzVec, clave) : [];
-      var filasCan = mzCan >= 0 ? filasPorMz_(dCan, mzCan, clave) : [];
+      var filasVec = mzVec >= 0 ? filasPorMz_(dVec, mzVec, clave, encVec.idx) : [];
+      var filasCan = mzCan >= 0 ? filasPorMz_(dCan, mzCan, clave, encCan.idx) : [];
       if (filasVec.length !== 1 || filasCan.length !== 1) {
         return outJson_({ ok: false, error: "Manzano no encontrado o duplicado (" +
           filasVec.length + "/" + filasCan.length + ")" });

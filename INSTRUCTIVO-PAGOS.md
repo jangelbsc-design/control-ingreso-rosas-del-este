@@ -100,7 +100,7 @@ ve en la Bitácora → debe decir **v25**.
 | **`Illegal return statement`, línea 22** | Se pegó solo un fragmento, o quedó contenido viejo mezclado: un `return` quedó fuera de una función | Borrar **todo** el contenido del editor (Ctrl+A + Supr, verificar que quede vacío) y pegar completo `server/Codigo-para-pegar.gs`. Si aún falla, **Archivo → Historial de versiones** y restaurar la última versión que funcionaba, y volver a pegar |
 | `Acción inválida: updatePago` | Falta el Paso 1 | Pegar el `.gs` y volver a implementar |
 | `No se encuentran las pestañas…` | La hoja no se llama `PROPIETARIOS` o `Hoja1` | Revisar `SHEET_NAME` / `SHEET_CANCELADO` en `js/config.js` |
-| `Manzano no encontrado o duplicado` | El manzano no existe o está repetido en alguna pestaña | Revisar la hoja; la app no escribe nada en ese caso |
+| `Manzano no encontrado o duplicado` | El manzano no existe, está repetido, **o la fila de encabezados de `Hoja1` no es la primera** (hay filas vacías u ocultas arriba) | Desde v25.1 el script busca el encabezado en las primeras 15 filas, así que esto ya no debería pasar. Verificar con `?action=diag`: `Hoja1` debe mostrar `"filaEncabezado"` y `"mz"` distinto de `-1` |
 | `Una celda destino tiene fórmula` | Alguien puso una fórmula en ESTADO/CANCELADO/GESTIÓN | La app no sobrescribe nada; corregir la celda a mano |
 | `Error de red al guardar` | Sin internet o cambió la URL del script | Revisar conexión y `BITACORA_URL` |
 | El guardia sigue viendo «EN MORA» | Caché vieja en ese celular | Cerrar y abrir la app 1–2 veces |
